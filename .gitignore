@@ -1,0 +1,86 @@
+###############################
+# VISUAL STUDIO / .NET / BLAZOR CLEAN GITIGNORE
+###############################
+
+# Build results
+bin/
+obj/
+[Bb]uild/
+[Bb]ld/
+
+# Blazor static web assets (auto-generated)
+wwwroot/css/**/*.bundle.scp.css
+wwwroot/css/**/*.bundle.css
+wwwroot/**/*.gz
+wwwroot/**/*.br
+wwwroot/**/*.map
+
+# Cache files
+*.nuget.cache
+*.assets.cache
+*.cache
+*.db
+*.pdb
+*.tmp
+*.log
+
+# Visual Studio cache/settings
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider / Resharper
+.idea/
+*.DotSettings.user
+
+# Test results
+TestResult*/
+[Tt]est[Rr]esult*
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+
+# Generated code (Razor, scoped CSS, etc.)
+*.g.cs
+*.g.i.cs
+*.razor.g.cs
+*.razor.g.i.cs
+*.scopedcss
+*.scopedcss.css
+obj/**/*scopedcss*
+
+# Publish profiles
+*.pubxml
+*.publishproj
+
+# Config transforms
+web.config.*
+app.config.*
+
+# Backup & archive files
+*.bak
+*.old
+*.zip
+*.tar
+*.gz
+*.7z
+
+# VS Code settings
+.vscode/
+
+# macOS and Windows system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+###############################
+# END OF CLEAN GITIGNORE
+###############################

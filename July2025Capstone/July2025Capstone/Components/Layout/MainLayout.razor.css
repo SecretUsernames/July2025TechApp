@@ -94,3 +94,14 @@ main {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+    /* Let page-level backgrounds (like .med-page) show through */
+article.content { 
+  background: transparent !important; 
+}
+
+/* Optional: make the top bar float on the gradient */
+.top-row {
+  background: transparent !important;
+  border-bottom: 0 !important;
+}

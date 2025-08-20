@@ -7,18 +7,31 @@
   --d:#ef4444; --d-50:#fef2f2; --d-100:#fee2e2;
 }
 
-/* Navbar Logo Styling */
+/* Navbar Logo Styling - Enhanced for HTTPS compatibility */
 .navbar-logo {
-    height: 32px;
-    width: auto;
-    max-width: 40px;
+    height: 32px !important;
+    width: auto !important;
+    max-width: 40px !important;
+    max-height: 32px !important;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 @media (max-width: 768px) {
     .navbar-logo {
-        height: 24px;
-        max-width: 30px;
+        height: 24px !important;
+        max-width: 30px !important;
+        max-height: 24px !important;
     }
+}
+
+/* Ensure navbar brand container doesn't grow */
+.navbar-brand {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
 }
 
 /* page bg (optional) */

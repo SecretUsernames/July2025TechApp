@@ -1,7 +1,165 @@
 ﻿@page "/"
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
 
-<PageTitle>Home</PageTitle>
+<div class="container py-4">
+    <!-- Hero -->
+    <div class="med-banner mb-4">
+        <h1 class="mb-1">MedVault</h1>
+        <p class="mb-0">
+            Securely store your medical records, auto-fill check-ins, and see instant health insights.
+        </p>
+    </div>
 
-<h1>Hello, world!</h1>
+    <!-- Top actions -->
+    <div class="row g-4 med-actions">
+        <div class="col-md-4">
+            <div class="card med-card h-100">
+                <div class="card-body">
+                    <div class="med-section-title">Upload</div>
+                    <h5 class="card-title">Medical Records</h5>
+                    <p class="text-muted mb-3">PDFs, CCD/HL7, labs, and imaging reports.</p>
+                    <NavLink class="btn btn-primary w-100" href="records-upload">
+                        <span class="bi bi-file-earmark-arrow-up me-1"></span> Upload Records
+                    </NavLink>
+                </div>
+            </div>
+        </div>
 
-Welcome to your new app.
+        <div class="col-md-4">
+            <div class="card med-card h-100">
+                <div class="card-body">
+                    <div class="med-section-title">Upload</div>
+                    <h5 class="card-title">Check-in Info</h5>
+                    <p class="text-muted mb-3">Demographics & insurance for one-tap check-in.</p>
+                    <NavLink class="btn btn-success w-100" href="checkin-upload">
+                        <span class="bi bi-clipboard-check me-1"></span> Upload Check-in
+                    </NavLink>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card med-card h-100">
+                <div class="card-body">
+                    <div class="med-section-title">Insights</div>
+                    <h5 class="card-title">Analytics</h5>
+                    <p class="text-muted mb-3">Trends, alerts, and insights — at a glance.</p>
+                    <div class="d-grid gap-2">
+                        <NavLink class="btn btn-outline-primary" href="analytics">
+                            <span class="bi bi-graph-up me-1"></span> View Analytics
+                        </NavLink>
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="med-kpi my-4">
+        <span class="badge badge-soft"><strong>BP:</strong> 118/76</span>
+        <span class="badge badge-soft-danger"><strong>HR:</strong> 68 bpm</span>
+        <span class="badge badge-soft-info"><strong>Glucose (post-meal):</strong> 128 mg/dL</span>
+        <span class="badge badge-soft-success"><strong>Weight:</strong> 162 lb</span>
+        <span class="badge badge-soft"><strong>Last upload:</strong> 2h</span>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card med-card">
+                <div class="card-body">
+                    <div class="med-section-title">Vitals</div>
+                    <h5 class="card-title mb-3">Blood Pressure</h5>
+                    <div class="med-chart-wrap">
+                        <canvas id="bpChart" class="med-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card med-card">
+                <div class="card-body">
+                    <div class="med-section-title">Vitals</div>
+                    <h5 class="card-title mb-3">Heart Rate</h5>
+                    <div class="med-chart-wrap">
+                        <canvas id="hrChart" class="med-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card med-card">
+                <div class="card-body">
+                    <div class="med-section-title">Labs</div>
+                    <h5 class="card-title mb-3">Glucose</h5>
+                    <div class="med-chart-wrap">
+                        <canvas id="glucoseChart" class="med-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card med-card">
+                <div class="card-body">
+                    <div class="med-section-title">Body</div>
+                    <h5 class="card-title mb-3">Weight & BMI</h5>
+                    <div class="med-chart-wrap">
+                        <canvas id="weightChart" class="med-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Quick Links + Privacy -->
+    <div class="row g-4 mt-1">
+        <div class="col-lg-8">
+            <div class="card med-card">
+                <div class="card-body">
+                    <div class="med-section-title">Quick Links</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><NavLink href="records-upload">Add a new lab result</NavLink></li>
+                                <li><NavLink href="checkin-upload">Update insurance</NavLink></li>
+                                <li><NavLink href="analytics">See all charts</NavLink></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><NavLink href="">Help & docs (soon)</NavLink></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card med-card">
+                <div class="card-body">
+                    <div class="med-section-title">Privacy</div>
+                    <h5 class="card-title">Your data is your data</h5>
+                    <p class="text-muted mb-0">Uploads are encrypted at rest and in transit.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await JS.InvokeVoidAsync("medvaultCharts.initAll"); }
+            catch { /* ignore init errors in dev */ }
+        }
+    }
+}

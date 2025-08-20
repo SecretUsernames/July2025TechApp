@@ -1,52 +1,50 @@
-﻿@implements IDisposable
+@implements IDisposable
 @inject NavigationManager NavigationManager
-
+ 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">MedVault</a>
     </div>
 </div>
-
+ 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
+ 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-
+ 
         <!-- Home -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-
+ 
         <!-- MedVault features (moved above Weather/Counter) -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="records-upload">
                 <span class="bi bi-folder2-open-nav-menu" aria-hidden="true"></span> Records Upload
             </NavLink>
         </div>
-
+ 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="checkin-upload">
                 <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span> Check-in Upload
             </NavLink>
         </div>
-
+ 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="analytics">
                 <span class="bi bi-graph-up-arrow-nav-menu" aria-hidden="true"></span> Analytics
             </NavLink>
         </div>
-
-
-
+ 
         <!-- Auth -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="auth">
                 <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
             </NavLink>
         </div>
-
+ 
         <AuthorizeView>
             <Authorized Context="authContext">
                 <div class="nav-item px-3">
@@ -79,22 +77,22 @@
         </AuthorizeView>
     </nav>
 </div>
-
+ 
 @code {
     private string? currentUrl;
-
+ 
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
     }
-
+ 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
-
+ 
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;

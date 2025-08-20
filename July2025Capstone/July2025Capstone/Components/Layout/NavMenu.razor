@@ -1,10 +1,9 @@
 ﻿@implements IDisposable
-
 @inject NavigationManager NavigationManager
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">July2025Capstone</a>
+        <a class="navbar-brand" href="">MedVault</a>
     </div>
 </div>
 
@@ -12,9 +11,38 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
+
+        <!-- Home -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <!-- MedVault features (moved above Weather/Counter) -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="records-upload">
+                <span class="bi bi-folder2-open-nav-menu" aria-hidden="true"></span> Records Upload
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="checkin-upload">
+                <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span> Check-in Upload
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="analytics">
+                <span class="bi bi-graph-up-arrow-nav-menu" aria-hidden="true"></span> Analytics
+            </NavLink>
+        </div>
+
+
+        <!-- Sample pages pushed lower -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
 
@@ -24,12 +52,7 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
+        <!-- Auth -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="auth">
                 <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
@@ -37,10 +60,10 @@
         </div>
 
         <AuthorizeView>
-            <Authorized>
+            <Authorized Context="authContext">
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @authContext.User.Identity?.Name
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
@@ -89,4 +112,3 @@
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
-

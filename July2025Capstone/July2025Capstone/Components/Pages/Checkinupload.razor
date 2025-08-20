@@ -1,0 +1,31 @@
+@page "/checkin-upload"
+@layout July2025Capstone.Components.Layout.MainLayout
+
+<h3 class="mb-3">Upload Check-in Information</h3>
+<p class="text-muted">Insurance, demographics, emergency contacts—skip the clipboard at the hospital.</p>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <InputFile OnChange="OnFilesSelected" />
+    <div class="row g-3 mt-1">
+      <div class="col-md-6">
+        <label class="form-label">Or paste JSON</label>
+        <textarea class="form-control" rows="6" placeholder='{"firstName":"..."}'></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" rows="6" placeholder="Any special instructions…"></textarea>
+      </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+      <button class="btn btn-primary" disabled="@(!hasInput)">Save Check-in Profile</button>
+      <button class="btn btn-outline-secondary">Preview</button>
+    </div>
+  </div>
+</div>
+
+@code {
+    bool hasInput;
+    void OnFilesSelected(InputFileChangeEventArgs e) => hasInput = e.FileCount > 0;
+}

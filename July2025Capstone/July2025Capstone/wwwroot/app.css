@@ -7,6 +7,20 @@
   --d:#ef4444; --d-50:#fef2f2; --d-100:#fee2e2;
 }
 
+/* Navbar Logo Styling */
+.navbar-logo {
+    height: 32px;
+    width: auto;
+    max-width: 40px;
+}
+
+@media (max-width: 768px) {
+    .navbar-logo {
+        height: 24px;
+        max-width: 30px;
+    }
+}
+
 /* page bg (optional) */
 .med-page {
   background: linear-gradient(180deg, #0B132B 0%, #1B2A49 70%, #203354 100%);

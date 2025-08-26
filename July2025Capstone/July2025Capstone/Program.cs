@@ -71,74 +71,13 @@ else
 
 app.UseHttpsRedirection();
 
-// Static file configuration
-if (app.Environment.IsDevelopment())
-{
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        OnPrepareResponse = ctx =>
-        {
-            var path = ctx.Context.Request.Path.Value?.ToLower();
-            if (path != null)
-            {
-                if (path.EndsWith(".css") || path.EndsWith(".js"))
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=300");
-                    ctx.Context.Response.Headers["Content-Type"] = "text/css; charset=utf-8";
-                }
-                else if (path.EndsWith(".wasm") || path.EndsWith(".dll"))
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=1800");
-                }
-                else if (path.EndsWith(".pdb") || path.EndsWith(".dat") || path.EndsWith(".json"))
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
-                }
-                else
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=600");
-                }
-
-                if (path.EndsWith(".wasm"))
-                {
-                    ctx.Context.Response.Headers.Add("Content-Type", "application/wasm");
-                }
-            }
-        }
-    });
-}
-else
-{
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        OnPrepareResponse = ctx =>
-        {
-            var path = ctx.Context.Request.Path.Value?.ToLower();
-            if (path != null)
-            {
-                if (path.EndsWith(".css") || path.EndsWith(".js"))
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=3600");
-                }
-                else if (path.EndsWith(".wasm") || path.EndsWith(".dll"))
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=86400");
-                }
-                else if (path.EndsWith(".dat") || path.EndsWith(".pdb"))
-                {
-                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=3600");
-                }
-            }
-        }
-    });
-}
-
 // Use CORS
 app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+app.UseStaticFiles();
 
 // Add API controllers routing
 app.MapControllers();

@@ -1,6 +1,10 @@
-﻿@page "/"
-@using Microsoft.JSInterop
+@page "/"
+@using System.Net.Http.Json
 @inject IJSRuntime JS
+@inject HttpClient Http
+@rendermode InteractiveWebAssembly
+
+<PageTitle>MedVault - Home</PageTitle>
 
 <div class="container py-4">
     <!-- Hero -->
@@ -44,12 +48,11 @@
                 <div class="card-body">
                     <div class="med-section-title">Insights</div>
                     <h5 class="card-title">Analytics</h5>
-                    <p class="text-muted mb-3">Trends, alerts, and insights — at a glance.</p>
+                    <p class="text-muted mb-3">Trends, alerts, and insights � at a glance.</p>
                     <div class="d-grid gap-2">
                         <NavLink class="btn btn-outline-primary" href="analytics">
                             <span class="bi bi-graph-up me-1"></span> View Analytics
                         </NavLink>
-                       
                     </div>
                 </div>
             </div>
@@ -57,13 +60,29 @@
     </div>
 
     <!-- KPI row -->
-    <div class="med-kpi my-4">
-        <span class="badge badge-soft"><strong>BP:</strong> 118/76</span>
-        <span class="badge badge-soft-danger"><strong>HR:</strong> 68 bpm</span>
-        <span class="badge badge-soft-info"><strong>Glucose (post-meal):</strong> 128 mg/dL</span>
-        <span class="badge badge-soft-success"><strong>Weight:</strong> 162 lb</span>
-        <span class="badge badge-soft"><strong>Last upload:</strong> 2h</span>
-    </div>
+    @if (isLoading)
+    {
+        <div class="med-kpi my-4">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span class="text-muted">Loading dashboard data...</span>
+        </div>
+    }
+    else if (dashboardData != null)
+    {
+        <div class="med-kpi my-4">
+            <span class="badge badge-soft"><strong>BP:</strong> @dashboardData.BloodPressure</span>
+            <span class="badge badge-soft-danger"><strong>HR:</strong> @dashboardData.HeartRate bpm</span>
+            <span class="badge badge-soft-info"><strong>Glucose:</strong> @dashboardData.Glucose mg/dL</span>
+            <span class="badge badge-soft-success"><strong>Weight:</strong> @dashboardData.Weight lb</span>
+            <span class="badge badge-soft"><strong>Last upload:</strong> @dashboardData.LastUpload</span>
+        </div>
+    }
+    else
+    {
+        <div class="med-kpi my-4">
+            <span class="badge badge-soft-warning">No recent data available</span>
+        </div>
+    }
 
     <!-- Charts -->
     <div class="row g-4">
@@ -116,7 +135,6 @@
         </div>
     </div>
 
-
     <!-- Quick Links + Privacy -->
     <div class="row g-4 mt-1">
         <div class="col-lg-8">
@@ -134,6 +152,10 @@
                         <div class="col-md-6">
                             <ul class="mb-0">
                                 <li><NavLink href="">Help & docs (soon)</NavLink></li>
+                                @if (recentActivities?.Any() == true)
+                                {
+                                    <li><strong>Recent:</strong> @recentActivities.First().Description</li>
+                                }
                             </ul>
                         </div>
                     </div>
@@ -147,6 +169,13 @@
                     <div class="med-section-title">Privacy</div>
                     <h5 class="card-title">Your data is your data</h5>
                     <p class="text-muted mb-0">Uploads are encrypted at rest and in transit.</p>
+                    @if (dashboardData != null)
+                    {
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-shield-check me-1"></i>
+                            @dashboardData.TotalRecords records securely stored
+                        </small>
+                    }
                 </div>
             </div>
         </div>
@@ -154,12 +183,83 @@
 </div>
 
 @code {
+    private bool isLoading = true;
+    private DashboardData? dashboardData;
+    private List<RecentActivity>? recentActivities;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            try { await JS.InvokeVoidAsync("medvaultCharts.initAll"); }
-            catch { /* ignore init errors in dev */ }
+            // Configure the HttpClient base address if it's not set (for server-side rendering)
+            if (string.IsNullOrEmpty(Http.BaseAddress?.ToString()))
+            {
+                Http.BaseAddress = new Uri("https://localhost:7014/"); // Update port as needed
+            }
+
+            await LoadDashboardData();
+            
+            try 
+            { 
+                await JS.InvokeVoidAsync("medvaultCharts.initAll"); 
+            }
+            catch 
+            { 
+                /* ignore init errors in dev */ 
+            }
         }
+    }
+
+    private async Task LoadDashboardData()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Load dashboard data and recent activities concurrently
+            var dashboardTask = Http.GetFromJsonAsync<DashboardData>("api/dashboard/summary");
+            var activitiesTask = Http.GetFromJsonAsync<List<RecentActivity>>("api/dashboard/recent-activities");
+
+            await Task.WhenAll(dashboardTask, activitiesTask);
+
+            dashboardData = await dashboardTask;
+            recentActivities = await activitiesTask ?? new List<RecentActivity>();
+        }
+        catch (HttpRequestException ex)
+        {
+            // Handle network errors silently for dashboard
+            Console.WriteLine($"Dashboard data load failed: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            // Handle other errors silently for dashboard
+            Console.WriteLine($"Unexpected error loading dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    // Model classes
+    public class DashboardData
+    {
+        public string BloodPressure { get; set; } = "118/76";
+        public int HeartRate { get; set; } = 68;
+        public int Glucose { get; set; } = 128;
+        public int Weight { get; set; } = 162;
+        public string LastUpload { get; set; } = "2h";
+        public int TotalRecords { get; set; } = 0;
+        public int AlertCount { get; set; } = 0;
+    }
+
+    public class RecentActivity
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string Type { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,223 @@
+@page "/analytics"
+@using System.Net.Http.Json
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Health Analytics</PageTitle>
+
+<h3 class="mb-3">Health Analytics</h3>
+<p class="text-muted">A quick look at your trends. (Live charts will plug in here.)</p>
+
+@if (isLoading)
+{
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (hasError)
+{
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">Error Loading Data</h4>
+                <p>@errorMessage</p>
+                <button class="btn btn-outline-danger" @onclick="RefreshData">Retry</button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Vitals Trend</h5>
+                    <div class="chart-placeholder">
+                        @if (vitalsData?.Readings?.Any() == true)
+                        {
+                            <div class="text-center text-muted">
+                                <p>Chart data loaded (@vitalsData.Readings.Count readings)</p>
+                                <small>Chart visualization will be implemented here</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">
+                                <p>No vitals data available</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="card-title mb-2">Recent Uploads</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        @if (recentUploads?.Any() == true)
+                        {
+                            @foreach (var upload in recentUploads)
+                            {
+                                <li>• @upload.Name — @upload.TimeAgo</li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="text-muted">No recent uploads</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Alerts</h6>
+                    @if (alertsResponse?.HasAlerts == true)
+                    {
+                        <p class="small text-danger mb-2">@alertsResponse.Count alert@(alertsResponse.Count != 1 ? "s" : "") need attention!</p>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mb-2">No critical alerts.</p>
+                    }
+                    <button class="btn btn-outline-primary btn-sm" @onclick="ViewAllAlerts" disabled="@(!alertsResponse?.HasAlerts ?? true)">
+                        View All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<UploadItem>? recentUploads;
+    private AlertsResponse? alertsResponse;
+    private VitalsData? vitalsData;
+    private bool isLoading = true;
+    private bool hasError = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        hasError = false;
+        errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            // Configure the HttpClient base address if it's not set (for server-side rendering)
+            if (string.IsNullOrEmpty(Http.BaseAddress?.ToString()))
+            {
+                // For server-side calls, use localhost or configure appropriately
+                Http.BaseAddress = new Uri("https://localhost:7014/"); // Update port as needed
+            }
+
+            // Load all data concurrently for better performance
+            var uploadTask = Http.GetFromJsonAsync<List<UploadItem>>("api/analytics/recent-uploads");
+            var alertsTask = Http.GetFromJsonAsync<AlertsResponse>("api/analytics/alerts");
+            var vitalsTask = Http.GetFromJsonAsync<VitalsData>("api/analytics/vitals");
+
+            await Task.WhenAll(uploadTask, alertsTask, vitalsTask);
+
+            recentUploads = await uploadTask ?? new List<UploadItem>();
+            alertsResponse = await alertsTask ?? new AlertsResponse();
+            vitalsData = await vitalsTask ?? new VitalsData();
+        }
+        catch (HttpRequestException ex)
+        {
+            hasError = true;
+            errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            hasError = true;
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadData();
+    }
+
+    private void ViewAllAlerts()
+    {
+        // TODO: Navigate to alerts page or show modal
+        // NavigationManager.NavigateTo("/alerts");
+    }
+
+    // Model classes for client-side use
+    public class UploadItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string TimeAgo { get; set; } = string.Empty;
+        public DateTime UploadDate { get; set; }
+    }
+
+    public class AlertsResponse
+    {
+        public bool HasAlerts { get; set; }
+        public int Count { get; set; }
+        public List<Alert> Alerts { get; set; } = new();
+    }
+
+    public class Alert
+    {
+        public string Message { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public DateTime CreatedDate { get; set; }
+    }
+
+    public class VitalsData
+    {
+        public List<VitalReading> Readings { get; set; } = new();
+    }
+
+    public class VitalReading
+    {
+        public DateTime Date { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public double Value { get; set; }
+        public string Unit { get; set; } = string.Empty;
+    }
+}
+
+<style>
+    .chart-placeholder {
+        height: 300px;
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>

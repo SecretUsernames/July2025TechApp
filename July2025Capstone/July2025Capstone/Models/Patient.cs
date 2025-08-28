@@ -12,7 +12,7 @@ namespace July2025Capstone.Models
         [Required]
         public string UserId { get; set; }
         
-        public string AddressId { get; set; }
+        public int? AddressId { get; set; } // Changed from int to int? (nullable)
         
         public string FirstName { get; set; }
         

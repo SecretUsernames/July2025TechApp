@@ -3,19 +3,13 @@ using July2025Capstone.Data;
 
 namespace July2025Capstone.Models
 {
-    public enum WeightUnit
-    {
-        Lbs,
-        Kg
-    }
-
     public class VitalWeight
     {
         [Key]
         public int Id { get; set; }
         
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         
         public decimal WeightValue { get; set; }
         
@@ -26,5 +20,14 @@ namespace July2025Capstone.Models
 
         // Navigation properties
         public virtual ApplicationUser User { get; set; } = null!;
+    }
+
+    public enum WeightUnit
+    {
+        [Display(Name = "lbs")]
+        Pounds = 0,
+        
+        [Display(Name = "kg")]
+        Kilograms = 1
     }
 }

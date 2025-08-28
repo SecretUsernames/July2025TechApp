@@ -118,19 +118,19 @@ namespace July2025Capstone.Data
                 .HasForeignKey<Consent>(c => c.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Pharmacy relationships
+            // Pharmacy relationships - CHANGED TO RESTRICT
             modelBuilder.Entity<Pharmacy>()
                 .HasOne(ph => ph.Address)
                 .WithMany(a => a.Pharmacies)
                 .HasForeignKey(ph => ph.AddressId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict); // Changed from Cascade to Restrict
 
-            // Patient preferred pharmacy (optional many-to-one)
+            // Patient preferred pharmacy - NOW CAN USE SETNULL
             modelBuilder.Entity<Patient>()
                 .HasOne(p => p.PreferredPharmacy)
                 .WithMany(ph => ph.Patients)
                 .HasForeignKey("PreferredPharmacyId")
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull); // Changed back to SetNull
 
             // Vital Signs relationships
             modelBuilder.Entity<VitalWeight>()

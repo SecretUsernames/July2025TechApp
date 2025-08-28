@@ -9,7 +9,7 @@ namespace July2025Capstone.Models
         public int Id { get; set; }
         
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         
         public int Systolic { get; set; }
         

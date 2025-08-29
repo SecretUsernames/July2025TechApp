@@ -1,4 +1,5 @@
 @page "/"
+@using July2025Capstone.Client.Pages
 @using System.Net.Http.Json
 @inject IJSRuntime JS
 @inject HttpClient Http
@@ -48,7 +49,7 @@
                 <div class="card-body">
                     <div class="med-section-title">Insights</div>
                     <h5 class="card-title">Analytics</h5>
-                    <p class="text-muted mb-3">Trends, alerts, and insights — at a glance.</p>
+                    <p class="text-muted mb-3">Trends, alerts, and insights ï¿½ at a glance.</p>
                     <div class="d-grid gap-2">
                         <NavLink class="btn btn-outline-primary" href="analytics">
                             <span class="bi bi-graph-up me-1"></span> View Analytics
@@ -181,7 +182,7 @@
         </div>
     </div>
 </div>
-
+@* <ChatWidget @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" /> *@
 @code {
     private bool isLoading = true;
     private DashboardData? dashboardData;
@@ -263,3 +264,5 @@
         public string Type { get; set; } = string.Empty;
     }
 }
+
+<ChatWidget @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />

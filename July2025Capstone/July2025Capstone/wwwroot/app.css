@@ -73,6 +73,8 @@
   margin-bottom:.25rem;
 }
 
+
+
 /* KPIs */
 .med-kpi{ display:flex; flex-wrap:wrap; gap:.6rem; }
 .badge-soft{ background:var(--p-50); color:var(--p); font-size:.75rem; padding:.4rem .6rem; border-radius:6px; }
@@ -82,3 +84,159 @@
 
 .med-chart-wrap{ height:180px; width:100%; position:relative; overflow:hidden; border-radius:10px; }
 .med-chart{ position:absolute; inset:0; width:100%!important; height:100%!important; }
+
+
+/* === ChatWidget 2.0 === */
+
+/* Floating button (better aesthetics + reliable click) */
+.mv-fab-btn{
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#7c3aed 0%,#2563eb 100%);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 12px 28px rgba(37, 99, 235, .35),
+    0 4px 10px rgba(0,0,0,.15);
+  cursor: pointer;
+  z-index: 2147483000;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.mv-fab-btn:hover{
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 36px rgba(124, 58, 237, .35),
+    0 6px 14px rgba(0,0,0,.18);
+  filter: saturate(1.05);
+}
+.mv-fab-btn:active{
+  transform: translateY(0);
+}
+
+/* Syncfusion Dialog shell */
+.e-dialog.mv-dialog{
+  position: fixed !important;
+  right: 24px;
+  bottom: 90px;
+  width: 360px;
+  height: 520px;
+  max-height: calc(100vh - 120px);
+  border-radius: 16px;
+  overflow: hidden;
+  z-index: 2147483001;
+  box-shadow: 0 16px 42px rgba(0,0,0,.22);
+}
+
+/* Header */
+.mv-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mv-header-title{
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mv-header-icon{ font-size: 18px; }
+.mv-header-min{
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  color: #64748b;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.mv-header-min:hover{ background: #f3f4f6; }
+
+/* Chat body + bubbles */
+.mv-chat-body{
+  height: 360px;
+  overflow: auto;
+  background: #f9fafb;
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.mv-bubble{
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin: 6px 0;
+  max-width: 80%;
+  word-break: break-word;
+}
+.mv-bubble.user{
+  background: #2563eb;
+  color: #fff;
+  margin-left: auto;
+  box-shadow: 0 2px 6px rgba(37,99,235,.25);
+}
+.mv-bubble.assistant{
+  background: #ffffff;
+  color: #111827;
+  margin-right: auto;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  position: relative;
+  padding-left: 28px; /* space for bot emoji */
+}
+.mv-bubble.assistant::before{
+  content: "🤖";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+}
+
+/* Typing indicator */
+.mv-bubble.typing{
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding-left: 12px;
+}
+.mv-bubble.typing span{
+  width: 6px;
+  height: 6px;
+  background: #9ca3af;
+  border-radius: 50%;
+  animation: mv-bounce 1.2s infinite ease-in-out;
+}
+.mv-bubble.typing span:nth-child(2){ animation-delay: .2s; }
+.mv-bubble.typing span:nth-child(3){ animation-delay: .4s; }
+@keyframes mv-bounce{
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* Composer */
+.mv-chat-input{
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  align-items: flex-end;
+}
+.mv-chat-input textarea{
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  resize: vertical;
+}
+.mv-chat-input button{
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+.mv-chat-disclaimer{
+  font-size: 12px;
+  color: #64748b;
+  padding: 6px 10px 12px;
+}

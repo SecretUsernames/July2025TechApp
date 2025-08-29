@@ -2,11 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using July2025Capstone.Data;
-using July2025Capstone.Models;
+using July2025Capstone.Models; // Add this to use SharedModels
 
 namespace July2025Capstone.Controllers
 {
-    // [Authorize] // Temporarily commented out for testing
     [ApiController]
     [Route("api/[controller]")]
     public class AnalyticsController : ControllerBase
@@ -108,7 +107,7 @@ namespace July2025Capstone.Controllers
         }
     }
 
-    // Analytics-specific models
+    // Keep only the response wrapper classes here
     public class AlertsResponse
     {
         public bool HasAlerts { get; set; }

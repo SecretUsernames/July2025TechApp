@@ -1,6 +1,8 @@
 namespace July2025Capstone.Models
 {
-    // Shared models used across multiple controllers
+    // DTOs for API responses and client communication
+    // These are NOT database entities - keep them separate from EF models
+    
     public class VitalReading
     {
         public DateTime Date { get; set; }

@@ -56,6 +56,42 @@ namespace July2025Capstone.Shared.Models
         public string Message { get; set; } = "";
     }
 
+    public class SaveInsuranceRequest
+    {
+        public InsurancePolicyDto Insurance { get; set; } = new();
+    }
+
+    public class SaveInsuranceResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int InsuranceId { get; set; }
+    }
+
+    public class DeleteInsuranceResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    public class SaveEmergencyContactRequest
+    {
+        public EmergencyContactDto EmergencyContact { get; set; } = new();
+    }
+
+    public class SaveEmergencyContactResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int EmergencyContactId { get; set; }
+    }
+
+    public class DeleteEmergencyContactResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
     public class CheckinFormSummary
     {
         public string Id { get; set; } = string.Empty;

@@ -845,6 +845,327 @@ PREFERRED PHARMACY:
                 });
             }
         }
+
+        [HttpGet("insurance")]
+        public async Task<ActionResult<List<InsurancePolicyDto>>> GetInsurance()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new List<InsurancePolicyDto>()); // Return empty list if no patient record
+                }
+
+                var insurancePolicies = await _context.InsurancePolicies
+                    .Where(ip => ip.PatientId == patient.Id)
+                    .ToListAsync();
+
+                var insuranceDtos = insurancePolicies.Select(ip => new InsurancePolicyDto
+                {
+                    Id = ip.Id,
+                    Provider = ip.Provider ?? "",
+                    PolicyNumber = ip.PolicyNumber ?? "",
+                    GroupNumber = ip.GroupNumber ?? "",
+                    PolicyholderName = ip.PolicyholderName ?? "",
+                    RelationshipToPatient = ip.RelationshipToPatient ?? ""
+                }).ToList();
+
+                return Ok(insuranceDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving insurance policies");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-insurance")]
+        public async Task<ActionResult<SaveInsuranceResponse>> SaveInsurance([FromBody] SaveInsuranceRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (request.Insurance.Id > 0)
+                {
+                    // Update existing insurance policy
+                    var existingInsurance = await _context.InsurancePolicies
+                        .FirstOrDefaultAsync(ip => ip.Id == request.Insurance.Id && ip.PatientId == patient.Id);
+
+                    if (existingInsurance == null)
+                    {
+                        return NotFound("Insurance policy not found or access denied");
+                    }
+
+                    existingInsurance.Provider = request.Insurance.Provider;
+                    existingInsurance.PolicyNumber = request.Insurance.PolicyNumber;
+                    existingInsurance.GroupNumber = request.Insurance.GroupNumber;
+                    existingInsurance.PolicyholderName = request.Insurance.PolicyholderName;
+                    existingInsurance.RelationshipToPatient = request.Insurance.RelationshipToPatient;
+                }
+                else
+                {
+                    // Create new insurance policy
+                    var newInsurance = new InsurancePolicy
+                    {
+                        PatientId = patient.Id,
+                        Provider = request.Insurance.Provider,
+                        PolicyNumber = request.Insurance.PolicyNumber,
+                        GroupNumber = request.Insurance.GroupNumber,
+                        PolicyholderName = request.Insurance.PolicyholderName,
+                        RelationshipToPatient = request.Insurance.RelationshipToPatient
+                    };
+
+                    _context.InsurancePolicies.Add(newInsurance);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveInsuranceResponse
+                {
+                    Success = true,
+                    Message = "Insurance policy saved successfully!",
+                    InsuranceId = request.Insurance.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving insurance policy");
+                return StatusCode(500, new SaveInsuranceResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("insurance/{insuranceId}")]
+        public async Task<ActionResult<DeleteInsuranceResponse>> DeleteInsurance(int insuranceId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found");
+                }
+
+                var insurance = await _context.InsurancePolicies
+                    .FirstOrDefaultAsync(ip => ip.Id == insuranceId && ip.PatientId == patient.Id);
+
+                if (insurance == null)
+                {
+                    return NotFound("Insurance policy not found or access denied");
+                }
+
+                _context.InsurancePolicies.Remove(insurance);
+                await _context.SaveChangesAsync();
+
+                return Ok(new DeleteInsuranceResponse
+                {
+                    Success = true,
+                    Message = "Insurance policy deleted successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting insurance policy");
+                return StatusCode(500, new DeleteInsuranceResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpGet("emergency-contacts")]
+        public async Task<ActionResult<List<EmergencyContactDto>>> GetEmergencyContacts()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new List<EmergencyContactDto>()); // Return empty list if no patient record
+                }
+
+                var emergencyContacts = await _context.EmergencyContacts
+                    .Where(ec => ec.PatientId == patient.Id)
+                    .ToListAsync();
+
+                var emergencyContactDtos = emergencyContacts.Select(ec => new EmergencyContactDto
+                {
+                    Id = ec.Id,
+                    FirstName = ec.FirstName ?? "",
+                    LastName = ec.LastName ?? "",
+                    Phone = ec.Phone ?? "",
+                    Relationship = ec.Relationship ?? ""
+                }).ToList();
+
+                return Ok(emergencyContactDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving emergency contacts");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-emergency-contact")]
+        public async Task<ActionResult<SaveEmergencyContactResponse>> SaveEmergencyContact([FromBody] SaveEmergencyContactRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (request.EmergencyContact.Id > 0)
+                {
+                    // Update existing emergency contact
+                    var existingContact = await _context.EmergencyContacts
+                        .FirstOrDefaultAsync(ec => ec.Id == request.EmergencyContact.Id && ec.PatientId == patient.Id);
+
+                    if (existingContact == null)
+                    {
+                        return NotFound("Emergency contact not found or access denied");
+                    }
+
+                    existingContact.FirstName = request.EmergencyContact.FirstName;
+                    existingContact.LastName = request.EmergencyContact.LastName;
+                    existingContact.Phone = request.EmergencyContact.Phone;
+                    existingContact.Relationship = request.EmergencyContact.Relationship;
+                }
+                else
+                {
+                    // Create new emergency contact
+                    var newContact = new EmergencyContact
+                    {
+                        PatientId = patient.Id,
+                        FirstName = request.EmergencyContact.FirstName,
+                        LastName = request.EmergencyContact.LastName,
+                        Phone = request.EmergencyContact.Phone,
+                        Relationship = request.EmergencyContact.Relationship
+                    };
+
+                    _context.EmergencyContacts.Add(newContact);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveEmergencyContactResponse
+                {
+                    Success = true,
+                    Message = "Emergency contact saved successfully!",
+                    EmergencyContactId = request.EmergencyContact.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving emergency contact");
+                return StatusCode(500, new SaveEmergencyContactResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("emergency-contact/{contactId}")]
+        public async Task<ActionResult<DeleteEmergencyContactResponse>> DeleteEmergencyContact(int contactId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found");
+                }
+
+                var contact = await _context.EmergencyContacts
+                    .FirstOrDefaultAsync(ec => ec.Id == contactId && ec.PatientId == patient.Id);
+
+                if (contact == null)
+                {
+                    return NotFound("Emergency contact not found or access denied");
+                }
+
+                _context.EmergencyContacts.Remove(contact);
+                await _context.SaveChangesAsync();
+
+                return Ok(new DeleteEmergencyContactResponse
+                {
+                    Success = true,
+                    Message = "Emergency contact deleted successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting emergency contact");
+                return StatusCode(500, new DeleteEmergencyContactResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
     }
 
     // Model classes for API requests/responses

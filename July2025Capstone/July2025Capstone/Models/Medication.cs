@@ -16,7 +16,7 @@ namespace July2025Capstone.Models
         
         public DosageUnit DosageUnit { get; set; } // mg, mcg, mL, g
         
-        public string CustomDosageUnit { get; set; } // for edge cases
+        public string? CustomDosageUnit { get; set; } // for edge cases - now nullable
 
         public MedicationFrequency Frequency { get; set; }
 

@@ -9,7 +9,7 @@ using July2025Capstone.Shared.Models;
 
 namespace July2025Capstone.Controllers
 {
-    // [Authorize] // Temporarily commented out for testing
+    [Authorize] // Enable authorization for all actions
     [ApiController]
     [Route("api/[controller]")]
     public class CheckinController : ControllerBase
@@ -25,20 +25,45 @@ namespace July2025Capstone.Controllers
             _logger = logger;
         }
 
+        private async Task<string?> GetCurrentUserIdAsync()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return _userManager.GetUserId(User);
+            }
+            
+            // For development: create or get a test user
+            var testUser = await _userManager.FindByEmailAsync("test@example.com");
+            if (testUser == null)
+            {
+                testUser = new ApplicationUser
+                {
+                    UserName = "test@example.com",
+                    Email = "test@example.com",
+                    EmailConfirmed = true
+                };
+                
+                var result = await _userManager.CreateAsync(testUser, "Test123!");
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Failed to create test user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return null;
+                }
+            }
+            
+            return testUser.Id;
+        }
+
         [HttpGet("user-form")]
         public async Task<ActionResult<CheckinFormSummary>> GetUserForm()
         {
             try
             {
-                // For testing, bypass user authentication - uncomment when ready for production
-                // var userId = _userManager.GetUserId(User);
-                // if (string.IsNullOrEmpty(userId))
-                // {
-                //     return Unauthorized();
-                // }
-
-                // For testing, use a mock user ID - replace with actual user ID in production
-                var userId = "test-user-id";
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated");
+                }
 
                 // Check if user has existing patient record with complete information
                 var patient = await _context.Patients
@@ -85,19 +110,18 @@ namespace July2025Capstone.Controllers
         {
             try
             {
-                // For testing, bypass user authentication
-                // var userId = _userManager.GetUserId(User);
-                // if (string.IsNullOrEmpty(userId))
-                // {
-                //     return Unauthorized();
-                // }
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated");
+                }
 
                 if (!int.TryParse(formId, out int patientId))
                 {
                     return BadRequest("Invalid form ID");
                 }
 
-                // Get patient data with all related information
+                // Get patient data with all related information - ensure it belongs to current user
                 var patient = await _context.Patients
                     .Include(p => p.Address)
                     .Include(p => p.InsurancePolicies)
@@ -109,11 +133,11 @@ namespace July2025Capstone.Controllers
                         .ThenInclude(ph => ph.Address)
                     .Include(p => p.PatientConditions)
                         .ThenInclude(pc => pc.Condition)
-                    .FirstOrDefaultAsync(p => p.Id == patientId);
+                    .FirstOrDefaultAsync(p => p.Id == patientId && p.UserId == userId);
 
                 if (patient == null)
                 {
-                    return NotFound("Patient form not found");
+                    return NotFound("Patient form not found or access denied");
                 }
 
                 // TODO: Implement actual PDF generation here using a library like iText7 or QuestPDF
@@ -135,6 +159,13 @@ namespace July2025Capstone.Controllers
         {
             try
             {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                // Ensure the patient belongs to the current user
                 var patient = await _context.Patients
                     .Include(p => p.Address)
                     .Include(p => p.InsurancePolicies)
@@ -146,11 +177,11 @@ namespace July2025Capstone.Controllers
                         .ThenInclude(ph => ph.Address)
                     .Include(p => p.PatientConditions)
                         .ThenInclude(pc => pc.Condition)
-                    .FirstOrDefaultAsync(p => p.Id == patientId);
+                    .FirstOrDefaultAsync(p => p.Id == patientId && p.UserId == userId);
 
                 if (patient == null)
                 {
-                    return NotFound();
+                    return NotFound("Patient not found or access denied");
                 }
 
                 var response = new PatientDetailResponse
@@ -190,12 +221,11 @@ namespace July2025Capstone.Controllers
         {
             try
             {
-                // For testing, bypass user authentication
-                // var userId = _userManager.GetUserId(User);
-                // if (string.IsNullOrEmpty(userId))
-                // {
-                //     return Unauthorized();
-                // }
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated");
+                }
 
                 var response = new CheckinUploadResponse
                 {
@@ -270,39 +300,25 @@ namespace July2025Capstone.Controllers
         {
             try
             {
-                // Get all patients for the current user (when authentication is enabled)
-                // var userId = _userManager.GetUserId(User);
-                // var patients = await _context.Patients
-                //     .Where(p => p.UserId == userId)
-                //     .Select(p => new CheckinProfileSummary
-                //     {
-                //         Id = p.Id.ToString(),
-                //         Name = $"{p.FirstName} {p.LastName} - Check-in Profile",
-                //         CreatedDate = DateTime.Now, // Add these fields to Patient model
-                //         LastModified = DateTime.Now
-                //     })
-                //     .ToListAsync();
-
-                // For testing, return mock data
-                var profiles = new List<CheckinProfileSummary>
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
                 {
-                    new CheckinProfileSummary
-                    {
-                        Id = "1",
-                        Name = "Primary Insurance Profile",
-                        CreatedDate = DateTime.Now.AddDays(-7),
-                        LastModified = DateTime.Now.AddDays(-2)
-                    },
-                    new CheckinProfileSummary
-                    {
-                        Id = "2",
-                        Name = "Emergency Contact Info",
-                        CreatedDate = DateTime.Now.AddDays(-14),
-                        LastModified = DateTime.Now.AddDays(-5)
-                    }
-                };
+                    return Unauthorized("User not authenticated");
+                }
 
-                return Ok(profiles);
+                // Get all patients for the current user
+                var patients = await _context.Patients
+                    .Where(p => p.UserId == userId)
+                    .Select(p => new CheckinProfileSummary
+                    {
+                        Id = p.Id.ToString(),
+                        Name = $"{p.FirstName} {p.LastName} - Check-in Profile",
+                        CreatedDate = DateTime.Now, // Add these fields to Patient model
+                        LastModified = DateTime.Now
+                    })
+                    .ToListAsync();
+
+                return Ok(patients);
             }
             catch (Exception ex)
             {
@@ -366,13 +382,47 @@ PREFERRED PHARMACY:
         {
             try
             {
-                // For testing, bypass user authentication
-                var userId = "test-user-id"; // Replace with actual user ID when auth is enabled
-                // var userId = _userManager.GetUserId(User);
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated");
+                }
 
-                // Check if patient already exists
+                // Check if patient already exists for this user
                 var existingPatient = await _context.Patients
+                    .Include(p => p.Address)
                     .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                Address? address = null;
+
+                // Handle address if provided
+                if (request.Address != null)
+                {
+                    if (existingPatient?.Address != null)
+                    {
+                        // Update existing address
+                        address = existingPatient.Address;
+                        address.Street = request.Address.Street;
+                        address.City = request.Address.City;
+                        address.State = request.Address.State;
+                        address.PostalCode = request.Address.PostalCode;
+                        address.Country = request.Address.Country;
+                    }
+                    else
+                    {
+                        // Create new address
+                        address = new Address
+                        {
+                            Street = request.Address.Street,
+                            City = request.Address.City,
+                            State = request.Address.State,
+                            PostalCode = request.Address.PostalCode,
+                            Country = request.Address.Country
+                        };
+                        _context.Addresses.Add(address);
+                        await _context.SaveChangesAsync(); // Save to get the address ID
+                    }
+                }
 
                 if (existingPatient != null)
                 {
@@ -384,10 +434,16 @@ PREFERRED PHARMACY:
                     existingPatient.Email = request.PersonalInfo.Email;
                     existingPatient.Phone = request.PersonalInfo.Phone;
                     existingPatient.PreferredContactMethod = (int)request.PersonalInfo.PreferredContactMethod;
+                    
+                    if (address != null)
+                    {
+                        existingPatient.AddressId = address.Id;
+                        existingPatient.Address = address;
+                    }
                 }
                 else
                 {
-                    // Create new patient
+                    // Create new patient for this user
                     var newPatient = new Patient
                     {
                         UserId = userId,
@@ -397,7 +453,9 @@ PREFERRED PHARMACY:
                         Gender = (int)request.PersonalInfo.Gender,
                         Email = request.PersonalInfo.Email,
                         Phone = request.PersonalInfo.Phone,
-                        PreferredContactMethod = (int)request.PersonalInfo.PreferredContactMethod
+                        PreferredContactMethod = (int)request.PersonalInfo.PreferredContactMethod,
+                        AddressId = address?.Id,
+                        Address = address
                     };
 
                     _context.Patients.Add(newPatient);
@@ -405,11 +463,13 @@ PREFERRED PHARMACY:
 
                 await _context.SaveChangesAsync();
 
+                var patientId = existingPatient?.Id ?? (await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId))?.Id ?? 0;
+
                 return Ok(new SavePersonalInfoResponse
                 {
                     Success = true,
                     Message = "Personal information saved successfully!",
-                    PatientId = existingPatient?.Id ?? 0
+                    PatientId = patientId
                 });
             }
             catch (Exception ex)
@@ -424,37 +484,365 @@ PREFERRED PHARMACY:
         }
 
         [HttpGet("personal-info")]
-        public async Task<ActionResult<PersonalInfoDto>> GetPersonalInfo()
+        public async Task<ActionResult<GetPersonalInfoResponse>> GetPersonalInfo()
         {
             try
             {
-                var userId = "test-user-id"; // Replace with actual user ID when auth is enabled
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .Include(p => p.Address)
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return NotFound("No patient record found for current user");
+                }
+
+                var response = new GetPersonalInfoResponse
+                {
+                    PersonalInfo = new PersonalInfoDto
+                    {
+                        FirstName = patient.FirstName,
+                        LastName = patient.LastName,
+                        DateOfBirth = patient.DateOfBirth,
+                        Gender = (GenderType)patient.Gender,
+                        Email = patient.Email,
+                        Phone = patient.Phone,
+                        PreferredContactMethod = (ContactMethod)patient.PreferredContactMethod
+                    },
+                    Address = patient.Address != null ? new AddressDto
+                    {
+                        Street = patient.Address.Street,
+                        City = patient.Address.City,
+                        State = patient.Address.State,
+                        PostalCode = patient.Address.PostalCode,
+                        Country = patient.Address.Country
+                    } : null
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving personal info");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("medications")]
+        public async Task<ActionResult<List<MedicationDto>>> GetMedications()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
 
                 var patient = await _context.Patients
                     .FirstOrDefaultAsync(p => p.UserId == userId);
 
                 if (patient == null)
                 {
-                    return NotFound();
+                    return Ok(new List<MedicationDto>()); // Return empty list if no patient record
                 }
 
-                var dto = new PersonalInfoDto
-                {
-                    FirstName = patient.FirstName,
-                    LastName = patient.LastName,
-                    DateOfBirth = patient.DateOfBirth,
-                    Gender = (GenderType)patient.Gender,
-                    Email = patient.Email,
-                    Phone = patient.Phone,
-                    PreferredContactMethod = (ContactMethod)patient.PreferredContactMethod
-                };
+                var medications = await _context.Medications
+                    .Where(m => m.PatientId == patient.Id)
+                    .ToListAsync();
 
-                return Ok(dto);
+                var medicationDtos = medications.Select(m => new MedicationDto
+                {
+                    Id = m.Id,
+                    Name = m.Name ?? "",
+                    DosageStrength = m.DosageStrength,
+                    DosageUnit = (Shared.Models.DosageUnit)m.DosageUnit,
+                    CustomDosageUnit = m.CustomDosageUnit,
+                    Frequency = (Shared.Models.MedicationFrequency)m.Frequency
+                }).ToList();
+
+                return Ok(medicationDtos);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving personal info");
+                _logger.LogError(ex, "Error retrieving medications");
                 return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-medication")]
+        public async Task<ActionResult<SaveMedicationResponse>> SaveMedication([FromBody] SaveMedicationRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (request.Medication.Id > 0)
+                {
+                    // Update existing medication
+                    var existingMedication = await _context.Medications
+                        .FirstOrDefaultAsync(m => m.Id == request.Medication.Id && m.PatientId == patient.Id);
+
+                    if (existingMedication == null)
+                    {
+                        return NotFound("Medication not found or access denied");
+                    }
+
+                    existingMedication.Name = request.Medication.Name;
+                    existingMedication.DosageStrength = request.Medication.DosageStrength;
+                    existingMedication.DosageUnit = (Models.DosageUnit)request.Medication.DosageUnit;
+                    existingMedication.CustomDosageUnit = request.Medication.CustomDosageUnit;
+                    existingMedication.Frequency = (Models.MedicationFrequency)request.Medication.Frequency;
+                }
+                else
+                {
+                    // Create new medication
+                    var newMedication = new Medication
+                    {
+                        PatientId = patient.Id,
+                        Name = request.Medication.Name,
+                        DosageStrength = request.Medication.DosageStrength,
+                        DosageUnit = (Models.DosageUnit)request.Medication.DosageUnit,
+                        CustomDosageUnit = request.Medication.CustomDosageUnit,
+                        Frequency = (Models.MedicationFrequency)request.Medication.Frequency
+                    };
+
+                    _context.Medications.Add(newMedication);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveMedicationResponse
+                {
+                    Success = true,
+                    Message = "Medication saved successfully!",
+                    MedicationId = request.Medication.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving medication");
+                return StatusCode(500, new SaveMedicationResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("medication/{medicationId}")]
+        public async Task<ActionResult<DeleteMedicationResponse>> DeleteMedication(int medicationId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found");
+                }
+
+                var medication = await _context.Medications
+                    .FirstOrDefaultAsync(m => m.Id == medicationId && m.PatientId == patient.Id);
+
+                if (medication == null)
+                {
+                    return NotFound("Medication not found or access denied");
+                }
+
+                _context.Medications.Remove(medication);
+                await _context.SaveChangesAsync();
+
+                return Ok(new DeleteMedicationResponse
+                {
+                    Success = true,
+                    Message = "Medication deleted successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting medication");
+                return StatusCode(500, new DeleteMedicationResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpGet("allergies")]
+        public async Task<ActionResult<List<AllergyDto>>> GetAllergies()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new List<AllergyDto>()); // Return empty list if no patient record
+                }
+
+                var allergies = await _context.Allergies
+                    .Where(a => a.PatientId == patient.Id)
+                    .ToListAsync();
+
+                var allergyDtos = allergies.Select(a => new AllergyDto
+                {
+                    Id = a.Id,
+                    Allergen = a.Allergen
+                }).ToList();
+
+                return Ok(allergyDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving allergies");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-allergy")]
+        public async Task<ActionResult<SaveAllergyResponse>> SaveAllergy([FromBody] SaveAllergyRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (request.Allergy.Id > 0)
+                {
+                    // Update existing allergy
+                    var existingAllergy = await _context.Allergies
+                        .FirstOrDefaultAsync(a => a.Id == request.Allergy.Id && a.PatientId == patient.Id);
+
+                    if (existingAllergy == null)
+                    {
+                        return NotFound("Allergy not found or access denied");
+                    }
+
+                    existingAllergy.Allergen = request.Allergy.Allergen;
+                }
+                else
+                {
+                    // Create new allergy
+                    var newAllergy = new Allergy
+                    {
+                        PatientId = patient.Id,
+                        Allergen = request.Allergy.Allergen
+                    };
+
+                    _context.Allergies.Add(newAllergy);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveAllergyResponse
+                {
+                    Success = true,
+                    Message = "Allergy saved successfully!",
+                    AllergyId = request.Allergy.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving allergy");
+                return StatusCode(500, new SaveAllergyResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("allergy/{allergyId}")]
+        public async Task<ActionResult<DeleteAllergyResponse>> DeleteAllergy(int allergyId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found");
+                }
+
+                var allergy = await _context.Allergies
+                    .FirstOrDefaultAsync(a => a.Id == allergyId && a.PatientId == patient.Id);
+
+                if (allergy == null)
+                {
+                    return NotFound("Allergy not found or access denied");
+                }
+
+                _context.Allergies.Remove(allergy);
+                await _context.SaveChangesAsync();
+
+                return Ok(new DeleteAllergyResponse
+                {
+                    Success = true,
+                    Message = "Allergy deleted successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting allergy");
+                return StatusCode(500, new DeleteAllergyResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
             }
         }
     }

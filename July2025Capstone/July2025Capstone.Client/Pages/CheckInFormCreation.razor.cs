@@ -86,7 +86,7 @@ public partial class CheckInFormCreation : ComponentBase
         if (existingFormSummary != null)
         {
             // Navigate to edit mode with the existing form ID
-            Navigation.NavigateTo($"/checkin-form-creation/edit/{existingFormSummary.Id}");
+            Navigation.NavigateTo($"/checkin-form-creation/personal-info");
         }
     }
 

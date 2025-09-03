@@ -12,7 +12,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
 
-// Register Syncfusion for WASM
+// Add Syncfusion Blazor service
 builder.Services.AddSyncfusionBlazor();
 
 await builder.Build().RunAsync();

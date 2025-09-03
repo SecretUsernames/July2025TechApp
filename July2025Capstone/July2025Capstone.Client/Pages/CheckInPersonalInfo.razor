@@ -1,0 +1,196 @@
+@page "/checkin-form-creation/personal-info"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using July2025Capstone.Shared.Models
+@using System.Net.Http.Json
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Personal Information - Check-in Form</PageTitle>
+
+<div class="container py-4">
+    <!-- Progress Bar -->
+    <div class="mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted">Step 1 of 7</span>
+            <span class="text-muted">Personal Information</span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: 14%"></div>
+        </div>
+    </div>
+
+    <h3 class="mb-3">Personal Information</h3>
+    <p class="text-muted">Please provide your basic personal details.</p>
+
+    <EditForm Model="personalInfo" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">First Name *</label>
+                        <InputText @bind-Value="personalInfo.FirstName" class="form-control" />
+                        <ValidationMessage For="@(() => personalInfo.FirstName)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Last Name *</label>
+                        <InputText @bind-Value="personalInfo.LastName" class="form-control" />
+                        <ValidationMessage For="@(() => personalInfo.LastName)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Birth *</label>
+                        <InputDate @bind-Value="personalInfo.DateOfBirth" class="form-control" />
+                        <ValidationMessage For="@(() => personalInfo.DateOfBirth)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gender</label>
+                        <InputSelect @bind-Value="personalInfo.Gender" class="form-select">
+                            <option value="">Select gender</option>
+                            <option value="@GenderType.Male">Male</option>
+                            <option value="@GenderType.Female">Female</option>
+                            <option value="@GenderType.Other">Other</option>
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email *</label>
+                        <InputText @bind-Value="personalInfo.Email" type="email" class="form-control" />
+                        <ValidationMessage For="@(() => personalInfo.Email)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number *</label>
+                        <InputText @bind-Value="personalInfo.Phone" type="tel" class="form-control" />
+                        <ValidationMessage For="@(() => personalInfo.Phone)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Preferred Contact Method</label>
+                        <InputSelect @bind-Value="personalInfo.PreferredContactMethod" class="form-select">
+                            <option value="">Select preferred contact method</option>
+                            <option value="@ContactMethod.Phone">Phone</option>
+                            <option value="@ContactMethod.Email">Email</option>
+                            <option value="@ContactMethod.Text">Text Message</option>
+                        </InputSelect>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+            <button type="button" @onclick="GoBack" class="btn btn-outline-secondary">
+                <span class="bi bi-arrow-left me-2"></span>Back
+            </button>
+            <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                }
+                Continue to Address<span class="bi bi-arrow-right ms-2"></span>
+            </button>
+        </div>
+    </EditForm>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success mt-3" role="alert">
+            @successMessage
+        </div>
+    }
+</div>
+
+@code {
+    private PersonalInfoDto personalInfo = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Configure HttpClient base address
+        if (string.IsNullOrEmpty(Http.BaseAddress?.ToString()))
+        {
+            Http.BaseAddress = new Uri("https://localhost:7014/");
+        }
+
+        // Load existing data if editing
+        await LoadExistingData();
+    }
+
+    private async Task LoadExistingData()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/checkin/personal-info");
+            if (response.IsSuccessStatusCode)
+            {
+                var existingData = await response.Content.ReadFromJsonAsync<PersonalInfoDto>();
+                if (existingData != null)
+                {
+                    personalInfo = existingData;
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading existing data: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var request = new SavePersonalInfoRequest { PersonalInfo = personalInfo };
+            var response = await Http.PostAsJsonAsync("api/checkin/save-personal-info", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<SavePersonalInfoResponse>();
+                if (result?.Success == true)
+                {
+                    successMessage = "Personal information saved successfully!";
+                    await Task.Delay(1000); // Brief delay to show success message
+                    Navigation.NavigateTo("/checkin-form-creation/address");
+                }
+                else
+                {
+                    errorMessage = result?.Message ?? "Failed to save personal information";
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error: {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/checkin-form-creation");
+    }
+}

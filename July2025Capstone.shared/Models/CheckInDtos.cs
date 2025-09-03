@@ -32,6 +32,26 @@ namespace July2025Capstone.Shared.Models
         Heavy = 3
     }
 
+    public enum DosageUnit
+    {
+        Milligrams,     // mg
+        Micrograms,     // mcg
+        Grams,          // g
+        Milliliters,    // mL
+        Liters,         // L
+        Units,          // IU (International Units)
+        Other           // for edge cases
+    }
+
+    public enum MedicationFrequency
+    {
+        OnceDaily,      // Once daily
+        TwiceDaily,     // Twice daily
+        ThreeDaily,     // Three times daily
+        FourDaily,      // Four times daily
+        AsNeeded        // As needed
+    }
+
     // Personal Information DTO
     public class PersonalInfoDto
     {
@@ -131,6 +151,73 @@ namespace July2025Capstone.Shared.Models
         public string Phone { get; set; } = "";
     }
 
+    // Simple Allergy DTO (matches your existing model)
+    public class AllergyDto
+    {
+        public int Id { get; set; }
+        
+        [Required(ErrorMessage = "Allergen name is required")]
+        [StringLength(200, ErrorMessage = "Allergen name cannot be longer than 200 characters")]
+        public string Allergen { get; set; } = "";
+    }
+
+    // Medication DTO
+    public class MedicationDto
+    {
+        public int Id { get; set; }
+        
+        [Required(ErrorMessage = "Medication name is required")]
+        [StringLength(200, ErrorMessage = "Medication name cannot be longer than 200 characters")]
+        public string Name { get; set; } = "";
+        
+        [Required(ErrorMessage = "Dosage strength is required")]
+        [Range(0.001, 99999, ErrorMessage = "Dosage strength must be greater than 0")]
+        public decimal DosageStrength { get; set; }
+        
+        [Required(ErrorMessage = "Dosage unit is required")]
+        public DosageUnit DosageUnit { get; set; }
+        
+        public string? CustomDosageUnit { get; set; }
+        
+        [Required(ErrorMessage = "Frequency is required")]
+        public MedicationFrequency Frequency { get; set; }
+
+        // Helper properties for display
+        public string DosageDisplay => DosageUnit == DosageUnit.Other && !string.IsNullOrEmpty(CustomDosageUnit) 
+            ? $"{DosageStrength} {CustomDosageUnit}" 
+            : $"{DosageStrength} {GetDosageUnitString()}";
+
+        public string FrequencyDisplay => GetFrequencyString();
+
+        private string GetDosageUnitString()
+        {
+            return DosageUnit switch
+            {
+                DosageUnit.Milligrams => "mg",
+                DosageUnit.Micrograms => "mcg",
+                DosageUnit.Grams => "g",
+                DosageUnit.Milliliters => "mL",
+                DosageUnit.Liters => "L",
+                DosageUnit.Units => "IU",
+                DosageUnit.Other => CustomDosageUnit ?? "units",
+                _ => "units"
+            };
+        }
+
+        private string GetFrequencyString()
+        {
+            return Frequency switch
+            {
+                MedicationFrequency.OnceDaily => "Once daily",
+                MedicationFrequency.TwiceDaily => "Twice daily",
+                MedicationFrequency.ThreeDaily => "Three times daily",
+                MedicationFrequency.FourDaily => "Four times daily",
+                MedicationFrequency.AsNeeded => "As needed",
+                _ => "Unknown"
+            };
+        }
+    }
+
     // Complete Patient Form DTO
     public class PatientFormDto
     {
@@ -139,5 +226,7 @@ namespace July2025Capstone.Shared.Models
         public AddressDto? Address { get; set; }
         public List<InsurancePolicyDto> InsurancePolicies { get; set; } = new();
         public List<EmergencyContactDto> EmergencyContacts { get; set; } = new();
+        public List<MedicationDto> Medications { get; set; } = new();
+        public List<AllergyDto> Allergies { get; set; } = new();
     }
 }

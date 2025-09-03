@@ -5,6 +5,7 @@ using July2025Capstone.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,9 @@ builder.Services.AddControllers();
 
 // Add HttpClient for server-side rendering (needed for SSR prerendering)
 builder.Services.AddHttpClient();
+
+// Add Syncfusion Blazor service for server-side rendering
+builder.Services.AddSyncfusionBlazor();
 
 // Add CORS
 builder.Services.AddCors(options =>

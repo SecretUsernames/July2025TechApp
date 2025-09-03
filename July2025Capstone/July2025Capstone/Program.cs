@@ -2,11 +2,16 @@ using July2025Capstone.Client.Pages;
 using July2025Capstone.Components;
 using July2025Capstone.Components.Account;
 using July2025Capstone.Data;
+using July2025Capstone.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1JEaF1cWWhAYVppR2Nbek5yflVAal9WVBYiSV9jS3tTf0VhWHtedndSTmRbV091Xw==");
+
 
 // Add services to the container BEFORE building the app
 builder.Services.AddRazorComponents()
@@ -53,6 +58,10 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+builder.Services.AddScoped<IMedicationService, MedicationService>();
+
+builder.Services.AddSyncfusionBlazor();
 
 // Build the app AFTER all services are registered
 var app = builder.Build();

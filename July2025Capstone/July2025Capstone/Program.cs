@@ -1,3 +1,4 @@
+using Syncfusion.Blazor;
 using July2025Capstone.Client.Pages;
 using July2025Capstone.Components;
 using July2025Capstone.Components.Account;
@@ -11,6 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container BEFORE building the app
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
+
+
+builder.Services.AddSyncfusionBlazor();
+
 
 // Add API controllers
 builder.Services.AddControllers();

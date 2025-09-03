@@ -1,0 +1,143 @@
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Popups
+@using Microsoft.AspNetCore.Components.Web
+@inject HttpClient Http
+
+<!-- Aesthetic, reliable floating button (not using SfFab) -->
+<button type="button"
+        class="mv-fab-btn"
+        aria-label="Open MedVault Assistant"
+        title="Open MedVault Assistant"
+        @onclick="Toggle">
+  <!-- Bot icon (SVG with gradient) -->
+  <svg viewBox="0 0 48 48" width="28" height="28" aria-hidden="true">
+    <defs>
+      <linearGradient id="mvFabGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#7c3aed"/>
+        <stop offset="100%" stop-color="#2563eb"/>
+      </linearGradient>
+    </defs>
+    <g fill="none" stroke="none">
+      <!-- face circle -->
+      <circle cx="24" cy="24" r="18" fill="white" opacity="0.15"></circle>
+      <!-- antenna -->
+      <rect x="22.75" y="9" width="2.5" height="6" rx="1.25" fill="white"/>
+      <circle cx="24" cy="8" r="3" fill="white"/>
+      <!-- head -->
+      <rect x="12" y="17" width="24" height="18" rx="9" fill="white"/>
+      <!-- eyes -->
+      <circle cx="18.5" cy="26" r="2.2" fill="url(#mvFabGrad)"/>
+      <circle cx="29.5" cy="26" r="2.2" fill="url(#mvFabGrad)"/>
+      <!-- smile -->
+      <path d="M18,30.5 C20,32.5 28,32.5 30,30.5" stroke="url(#mvFabGrad)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+    </g>
+  </svg>
+</button>
+
+<SfDialog @bind-Visible="IsOpen"
+          Width="360px"
+          Height="520px"
+          ShowCloseIcon="true"
+          IsModal="false"
+          Target="body"
+          ZIndex="10000"
+          CssClass="mv-dialog">
+  <DialogTemplates>
+    <Header>
+      <div class="mv-header">
+        <div class="mv-header-title">
+          <span class="mv-header-icon">🤖</span>
+          MedVault Assistant
+        </div>
+        <button class="mv-header-min" title="Minimize" @onclick="() => IsOpen = false">—</button>
+      </div>
+    </Header>
+
+    <Content>
+      <div class="mv-chat-body">
+        @foreach (var m in Messages)
+        {
+          <div class="mv-bubble @(m.Role)">
+            @m.Content
+          </div>
+        }
+
+        @if (Busy)
+        {
+          <div class="mv-bubble assistant typing">
+            <span></span><span></span><span></span>
+          </div>
+        }
+      </div>
+
+      <div class="mv-chat-input">
+        <textarea class="form-control"
+                  rows="2"
+                  placeholder="Type a message…"
+                  @bind="Draft"
+                  @onkeydown="HandleKey"></textarea>
+        <button class="btn btn-primary" @onclick="Send" disabled="@Busy">Send</button>
+      </div>
+
+      <div class="mv-chat-disclaimer">
+        Not medical advice. If urgent, call 911.
+      </div>
+    </Content>
+  </DialogTemplates>
+</SfDialog>
+
+@code {
+  bool IsOpen;
+  bool Busy;
+  string Draft = "";
+
+  record Msg(string Role, string Content);
+  List<Msg> Messages = new()
+  {
+    new("assistant", "Hi! How can I help?")
+  };
+
+  void Toggle() => IsOpen = !IsOpen;
+
+  async Task Send()
+  {
+    var text = Draft?.Trim();
+    if (string.IsNullOrEmpty(text)) return;
+
+    Draft = "";
+    Busy = true;
+    Messages.Add(new("user", text));
+    StateHasChanged();
+
+    try
+    {
+      // TODO: point to your real API; /api/chat is a placeholder
+      var req = new
+      {
+        sessionId = "home",
+        messages = Messages.Select(m => new { role = m.Role, content = m.Content }).ToList()
+      };
+
+      var res = await Http.PostAsJsonAsync("/api/chat", req);
+      var data = await res.Content.ReadFromJsonAsync<ChatResponse>();
+      Messages.Add(new("assistant", data?.reply ?? "Sorry, I couldn’t answer that."));
+    }
+    catch
+    {
+      Messages.Add(new("assistant", "Network error calling chat API."));
+    }
+    finally
+    {
+      Busy = false;
+    }
+  }
+
+  Task HandleKey(KeyboardEventArgs e)
+    => (e.Key == "Enter" && !e.ShiftKey) ? Send() : Task.CompletedTask;
+
+  class ChatResponse
+  {
+    public string sessionId { get; set; } = "";
+    public string reply { get; set; } = "";
+  }
+}

@@ -3,13 +3,12 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject HttpClient Http
 
-<!-- Aesthetic, reliable floating button (not using SfFab) -->
+<!-- Floating action button -->
 <button type="button"
         class="mv-fab-btn"
         aria-label="Open MedVault Assistant"
         title="Open MedVault Assistant"
         @onclick="Toggle">
-  <!-- Bot icon (SVG with gradient) -->
   <svg viewBox="0 0 48 48" width="28" height="28" aria-hidden="true">
     <defs>
       <linearGradient id="mvFabGrad" x1="0" y1="0" x2="1" y2="1">
@@ -18,17 +17,12 @@
       </linearGradient>
     </defs>
     <g fill="none" stroke="none">
-      <!-- face circle -->
       <circle cx="24" cy="24" r="18" fill="white" opacity="0.15"></circle>
-      <!-- antenna -->
       <rect x="22.75" y="9" width="2.5" height="6" rx="1.25" fill="white"/>
       <circle cx="24" cy="8" r="3" fill="white"/>
-      <!-- head -->
       <rect x="12" y="17" width="24" height="18" rx="9" fill="white"/>
-      <!-- eyes -->
       <circle cx="18.5" cy="26" r="2.2" fill="url(#mvFabGrad)"/>
       <circle cx="29.5" cy="26" r="2.2" fill="url(#mvFabGrad)"/>
-      <!-- smile -->
       <path d="M18,30.5 C20,32.5 28,32.5 30,30.5" stroke="url(#mvFabGrad)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
     </g>
   </svg>
@@ -94,7 +88,7 @@
   record Msg(string Role, string Content);
   List<Msg> Messages = new()
   {
-    new("assistant", "Hi! How can I help?")
+    new("assistant", "🤖 Hi! How can I help?")
   };
 
   void Toggle() => IsOpen = !IsOpen;
@@ -111,16 +105,18 @@
 
     try
     {
-      // TODO: point to your real API; /api/chat is a placeholder
-      var req = new
-      {
-        sessionId = "home",
-        messages = Messages.Select(m => new { role = m.Role, content = m.Content }).ToList()
-      };
+      var req = new { question = text };
+      var res = await Http.PostAsJsonAsync("/api/chat/ask", req);
 
-      var res = await Http.PostAsJsonAsync("/api/chat", req);
-      var data = await res.Content.ReadFromJsonAsync<ChatResponse>();
-      Messages.Add(new("assistant", data?.reply ?? "Sorry, I couldn’t answer that."));
+      if (res.IsSuccessStatusCode)
+      {
+        var data = await res.Content.ReadFromJsonAsync<ChatResponse>();
+        Messages.Add(new("assistant", data?.Answer ?? "Sorry, I couldn’t answer that."));
+      }
+      else
+      {
+        Messages.Add(new("assistant", "API error: " + await res.Content.ReadAsStringAsync()));
+      }
     }
     catch
     {
@@ -137,7 +133,6 @@
 
   class ChatResponse
   {
-    public string sessionId { get; set; } = "";
-    public string reply { get; set; } = "";
+    public string Answer { get; set; } = "";
   }
 }

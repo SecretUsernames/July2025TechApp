@@ -9,60 +9,67 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container BEFORE building the app
-builder.Services.AddRazorComponents()
-    .AddInteractiveWebAssemblyComponents();
-
-
+// Razor/Blazor
+builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddSyncfusionBlazor();
 
-
-// Add API controllers
+// API controllers
 builder.Services.AddControllers();
 
-// Add HttpClient for server-side rendering (needed for SSR prerendering)
+// HttpClient (SSR)
 builder.Services.AddHttpClient();
 
-// Add CORS
+// CORS (single dev policy)
+const string DevCors = "DevCors";
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
+    options.AddPolicy(DevCors, policy =>
         policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+              .AllowAnyHeader()
+              .AllowAnyMethod());
 });
 
+// Identity/Auth
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>();
-
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-    })
-    .AddIdentityCookies();
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+.AddIdentityCookies();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+// DB
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Identity Core
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+// OpenAI client
+builder.Services.AddHttpClient("OpenAI", client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/v1/");
+    var key = builder.Configuration["OpenAI:ApiKey"]; // user-secrets or env var
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", key);
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-// Build the app AFTER all services are registered
+// Build
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -74,19 +81,24 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Only force HTTPS outside dev
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-// Use CORS
-app.UseCors();
+// CORS for API
+app.UseCors(DevCors);
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 app.UseStaticFiles();
 
-// Add API controllers routing
-app.MapControllers();
+// API routes; disable antiforgery for controllers
+app.MapControllers().DisableAntiforgery();
 
+// Blazor
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(July2025Capstone.Client._Imports).Assembly);

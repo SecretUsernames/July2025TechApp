@@ -7,12 +7,12 @@ namespace July2025Capstone.Models
         [Key]
         public int Id { get; set; }
         
-        [Required]
         public int PatientId { get; set; }
         
         public DateTime SignedAt { get; set; }
         
-        public byte[]? SignatureImage { get; set; } // optional
+        [StringLength(100)]
+        public string? SignatureName { get; set; }
 
         // Navigation properties
         public virtual Patient Patient { get; set; } = null!;

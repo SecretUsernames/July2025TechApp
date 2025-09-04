@@ -1,7 +1,7 @@
-using Syncfusion.Blazor;
 using July2025Capstone.Client;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Syncfusion.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -12,7 +12,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
 
-// Register Syncfusion for WASM
+// Add Syncfusion Blazor service
 builder.Services.AddSyncfusionBlazor();
 
 await builder.Build().RunAsync();

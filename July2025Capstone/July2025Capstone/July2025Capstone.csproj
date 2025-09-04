@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Syncfusion.Blazor" Version="30.2.7" />
+    <ProjectReference Include="..\..\July2025Capstone.shared\July2025Capstone.Shared.csproj" />
     <ProjectReference Include="..\July2025Capstone.Client\July2025Capstone.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.18" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.18" />

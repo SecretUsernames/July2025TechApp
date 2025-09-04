@@ -173,6 +173,8 @@ namespace July2025Capstone.Controllers
                     .Include(p => p.Lifestyle)
                     .Include(p => p.Medications)
                     .Include(p => p.Allergies)
+                    .Include(p => p.VisitIntakes)
+                    .Include(p => p.Consent)
                     .Include(p => p.PreferredPharmacy)
                         .ThenInclude(ph => ph.Address)
                     .Include(p => p.PatientConditions)
@@ -186,7 +188,7 @@ namespace July2025Capstone.Controllers
 
                 var response = new PatientDetailResponse
                 {
-                    Patient = patient,
+                    // Don't return the full Patient entity to avoid circular references
                     CompletionStatus = new FormCompletionStatus
                     {
                         HasPersonalInfo = !string.IsNullOrEmpty(patient.FirstName) && !string.IsNullOrEmpty(patient.LastName),
@@ -196,6 +198,8 @@ namespace July2025Capstone.Controllers
                         HasMedications = patient.Medications.Any(),
                         HasAllergies = patient.Allergies.Any(),
                         HasLifestyle = patient.Lifestyle != null,
+                        HasVisitIntake = patient.VisitIntakes.Any(),
+                        HasConsent = patient.Consent != null,
                         OverallComplete = false
                     }
                 };
@@ -1166,6 +1170,726 @@ PREFERRED PHARMACY:
                 });
             }
         }
+
+        [HttpGet("conditions")]
+        public async Task<ActionResult<List<PatientConditionDto>>> GetConditions()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new List<PatientConditionDto>()); // Return empty list if no patient record
+                }
+
+                var patientConditions = await _context.PatientConditions
+                    .Include(pc => pc.Condition)
+                    .Where(pc => pc.PatientId == patient.Id)
+                    .ToListAsync();
+
+                var conditionDtos = patientConditions.Select(pc => new PatientConditionDto
+                {
+                    Id = pc.ConditionId,
+                    ConditionName = pc.Condition.Name ?? ""
+                }).ToList();
+
+                return Ok(conditionDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving conditions");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-condition")]
+        public async Task<ActionResult<SaveConditionResponse>> SaveCondition([FromBody] SaveConditionRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                // Check if this condition already exists for the patient
+                var existingPatientCondition = await _context.PatientConditions
+                    .Include(pc => pc.Condition)
+                    .FirstOrDefaultAsync(pc => pc.PatientId == patient.Id && pc.ConditionId == request.Condition.Id);
+
+                if (existingPatientCondition != null)
+                {
+                    return BadRequest("This condition is already added to your medical history.");
+                }
+
+                // Check if the condition exists in the system, if not create it
+                var condition = await _context.Conditions
+                    .FirstOrDefaultAsync(c => c.Name.ToLower() == request.Condition.ConditionName.ToLower());
+
+                if (condition == null)
+                {
+                    // Create new condition
+                    condition = new Condition
+                    {
+                        Name = request.Condition.ConditionName,
+                        IsActive = true // Default to true, but this isn't used in the UI anymore
+                    };
+                    _context.Conditions.Add(condition);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Create patient-condition relationship
+                var patientCondition = new PatientCondition
+                {
+                    PatientId = patient.Id,
+                    ConditionId = condition.Id
+                };
+
+                _context.PatientConditions.Add(patientCondition);
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveConditionResponse
+                {
+                    Success = true,
+                    Message = "Condition saved successfully!",
+                    ConditionId = condition.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving condition");
+                return StatusCode(500, new SaveConditionResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("condition/{conditionId}")]
+        public async Task<ActionResult<DeleteConditionResponse>> DeleteCondition(int conditionId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found");
+                }
+
+                var patientCondition = await _context.PatientConditions
+                    .FirstOrDefaultAsync(pc => pc.PatientId == patient.Id && pc.ConditionId == conditionId);
+
+                if (patientCondition == null)
+                {
+                    return NotFound("Condition not found or access denied");
+                }
+
+                _context.PatientConditions.Remove(patientCondition);
+                await _context.SaveChangesAsync();
+
+                return Ok(new DeleteConditionResponse
+                {
+                    Success = true,
+                    Message = "Condition removed successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting condition");
+                return StatusCode(500, new DeleteConditionResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpGet("procedures")]
+        public async Task<ActionResult<List<ProcedureDto>>> GetProcedures()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new List<ProcedureDto>()); // Return empty list if no patient record
+                }
+
+                var procedures = await _context.Procedures
+                    .Where(p => p.PatientId == patient.Id)
+                    .ToListAsync();
+
+                var procedureDtos = procedures.Select(p => new ProcedureDto
+                {
+                    Id = p.Id,
+                    ProcedureName = p.ProcedureName ?? "",
+                    ProcedureDate = p.ProcedureDate,
+                    Notes = p.Notes ?? ""
+                }).ToList();
+
+                return Ok(procedureDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving procedures");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-procedure")]
+        public async Task<ActionResult<SaveProcedureResponse>> SaveProcedure([FromBody] SaveProcedureRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (request.Procedure.Id > 0)
+                {
+                    // Update existing procedure
+                    var existingProcedure = await _context.Procedures
+                        .FirstOrDefaultAsync(p => p.Id == request.Procedure.Id && p.PatientId == patient.Id);
+
+                    if (existingProcedure == null)
+                    {
+                        return NotFound("Procedure not found or access denied");
+                    }
+
+                    existingProcedure.ProcedureName = request.Procedure.ProcedureName;
+                    existingProcedure.ProcedureDate = request.Procedure.ProcedureDate;
+                    existingProcedure.Notes = request.Procedure.Notes;
+                }
+                else
+                {
+                    // Create new procedure
+                    var newProcedure = new Procedure
+                    {
+                        PatientId = patient.Id,
+                        ProcedureName = request.Procedure.ProcedureName,
+                        ProcedureDate = request.Procedure.ProcedureDate,
+                        Notes = request.Procedure.Notes
+                    };
+
+                    _context.Procedures.Add(newProcedure);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveProcedureResponse
+                {
+                    Success = true,
+                    Message = "Procedure saved successfully!",
+                    ProcedureId = request.Procedure.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving procedure");
+                return StatusCode(500, new SaveProcedureResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("procedure/{procedureId}")]
+        public async Task<ActionResult<DeleteProcedureResponse>> DeleteProcedure(int procedureId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found");
+                }
+
+                var procedure = await _context.Procedures
+                    .FirstOrDefaultAsync(p => p.Id == procedureId && p.PatientId == patient.Id);
+
+                if (procedure == null)
+                {
+                    return NotFound("Procedure not found or access denied");
+                }
+
+                _context.Procedures.Remove(procedure);
+                await _context.SaveChangesAsync();
+
+                return Ok(new DeleteProcedureResponse
+                {
+                    Success = true,
+                    Message = "Procedure deleted successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting procedure");
+                return StatusCode(500, new DeleteProcedureResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpGet("visit-intake")]
+        public async Task<ActionResult<GetVisitIntakeResponse>> GetVisitIntake()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new GetVisitIntakeResponse { VisitIntake = null });
+                }
+
+                var visitIntake = await _context.VisitIntakes
+                    .FirstOrDefaultAsync(vi => vi.PatientId == patient.Id);
+
+                var response = new GetVisitIntakeResponse();
+
+                if (visitIntake != null)
+                {
+                    response.VisitIntake = new VisitIntakeDto
+                    {
+                        Id = visitIntake.Id,
+                        PrimaryReason = visitIntake.PrimaryReason ?? "",
+                        TreatedBefore = visitIntake.TreatedBefore
+                    };
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving visit intake");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-visit-intake")]
+        public async Task<ActionResult<SaveVisitIntakeResponse>> SaveVisitIntake([FromBody] SaveVisitIntakeRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                var existingVisitIntake = await _context.VisitIntakes
+                    .FirstOrDefaultAsync(vi => vi.PatientId == patient.Id);
+
+                if (existingVisitIntake != null)
+                {
+                    // Update existing visit intake
+                    existingVisitIntake.PrimaryReason = request.VisitIntake.PrimaryReason;
+                    existingVisitIntake.TreatedBefore = request.VisitIntake.TreatedBefore;
+                }
+                else
+                {
+                    // Create new visit intake
+                    var newVisitIntake = new VisitIntake
+                    {
+                        PatientId = patient.Id,
+                        PrimaryReason = request.VisitIntake.PrimaryReason,
+                        TreatedBefore = request.VisitIntake.TreatedBefore
+                    };
+
+                    _context.VisitIntakes.Add(newVisitIntake);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveVisitIntakeResponse
+                {
+                    Success = true,
+                    Message = "Visit information saved successfully!",
+                    VisitIntakeId = existingVisitIntake?.Id ?? 0
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving visit intake");
+                return StatusCode(500, new SaveVisitIntakeResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpGet("lifestyle")]
+        public async Task<ActionResult<GetLifestyleResponse>> GetLifestyle()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .Include(p => p.Lifestyle)
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                _logger.LogInformation("Patient found: {PatientFound}, Lifestyle found: {LifestyleFound}", 
+                    patient != null, patient?.Lifestyle != null);
+
+                if (patient == null)
+                {
+                    return Ok(new GetLifestyleResponse { Lifestyle = null });
+                }
+
+                var response = new GetLifestyleResponse();
+
+                if (patient.Lifestyle != null)
+                {
+                    _logger.LogInformation("Database lifestyle values - Tobacco: {Tobacco}, Alcohol: {Alcohol}, Drugs: {Drugs}",
+                        patient.Lifestyle.TobaccoUse, patient.Lifestyle.AlcoholUse, patient.Lifestyle.RecreationalDrugs);
+
+                    response.Lifestyle = new LifestyleDto
+                    {
+                        PatientId = patient.Lifestyle.PatientId,
+                        TobaccoUse = (July2025Capstone.Shared.Models.TobaccoUse)patient.Lifestyle.TobaccoUse,
+                        AlcoholUse = (July2025Capstone.Shared.Models.AlcoholUse)patient.Lifestyle.AlcoholUse,
+                        RecreationalDrugs = patient.Lifestyle.RecreationalDrugs
+                    };
+
+                    _logger.LogInformation("Mapped DTO values - Tobacco: {Tobacco} ({TobaccoInt}), Alcohol: {Alcohol} ({AlcoholInt}), Drugs: {Drugs}",
+                        response.Lifestyle.TobaccoUse, (int)response.Lifestyle.TobaccoUse, 
+                        response.Lifestyle.AlcoholUse, (int)response.Lifestyle.AlcoholUse, 
+                        response.Lifestyle.RecreationalDrugs);
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving lifestyle information");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-lifestyle")]
+        public async Task<ActionResult<SaveLifestyleResponse>> SaveLifestyle([FromBody] SaveLifestyleRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                // Get or create patient record
+                var patient = await _context.Patients
+                    .Include(p => p.Lifestyle)
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (patient.Lifestyle != null)
+                {
+                    // Update existing lifestyle
+                    patient.Lifestyle.TobaccoUse = (int)request.Lifestyle.TobaccoUse;
+                    patient.Lifestyle.AlcoholUse = (int)request.Lifestyle.AlcoholUse;
+                    patient.Lifestyle.RecreationalDrugs = request.Lifestyle.RecreationalDrugs;
+                }
+                else
+                {
+                    // Create new lifestyle record
+                    var newLifestyle = new Lifestyle
+                    {
+                        PatientId = patient.Id,
+                        TobaccoUse = (int)request.Lifestyle.TobaccoUse,
+                        AlcoholUse = (int)request.Lifestyle.AlcoholUse,
+                        RecreationalDrugs = request.Lifestyle.RecreationalDrugs
+                    };
+
+                    _context.Lifestyles.Add(newLifestyle);
+                    patient.Lifestyle = newLifestyle;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveLifestyleResponse
+                {
+                    Success = true,
+                    Message = "Lifestyle information saved successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving lifestyle information");
+                return StatusCode(500, new SaveLifestyleResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpDelete("lifestyle/{patientId}")]
+        public async Task<ActionResult> DeleteLifestyle(int patientId)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .Include(p => p.Lifestyle)
+                    .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == patientId);
+
+                if (patient == null)
+                {
+                    return NotFound("Patient not found");
+                }
+
+                if (patient.Lifestyle != null)
+                {
+                    _context.Lifestyles.Remove(patient.Lifestyle);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new { Success = true, Message = "Lifestyle data cleared successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing lifestyle data");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("consent")]
+        public async Task<ActionResult<GetConsentResponse>> GetConsent()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .Include(p => p.Consent)
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return Ok(new GetConsentResponse { Consent = null });
+                }
+
+                var response = new GetConsentResponse();
+
+                if (patient.Consent != null)
+                {
+                    response.Consent = new ConsentDto
+                    {
+                        Id = patient.Consent.Id,
+                        PatientId = patient.Consent.PatientId,
+                        HasConsented = true, // If consent exists, they have consented
+                        SignedAt = patient.Consent.SignedAt,
+                        SignatureName = patient.Consent.SignatureName,
+                        PatientName = $"{patient.FirstName} {patient.LastName}"
+                    };
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving consent information");
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("save-consent")]
+        public async Task<ActionResult<SaveConsentResponse>> SaveConsent([FromBody] SaveConsentRequest request)
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .Include(p => p.Consent)
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found. Please complete personal information first.");
+                }
+
+                if (patient.Consent != null)
+                {
+                    // Update existing consent
+                    patient.Consent.SignedAt = DateTime.UtcNow;
+                    patient.Consent.SignatureName = request.Consent.SignatureName;
+                }
+                else
+                {
+                    // Create new consent record
+                    var newConsent = new Consent
+                    {
+                        PatientId = patient.Id,
+                        SignedAt = DateTime.UtcNow,
+                        SignatureName = request.Consent.SignatureName
+                    };
+
+                    _context.Consents.Add(newConsent);
+                    patient.Consent = newConsent;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new SaveConsentResponse
+                {
+                    Success = true,
+                    Message = "Consent saved successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving consent");
+                return StatusCode(500, new SaveConsentResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpPost("complete-checkin")]
+        public async Task<ActionResult<CompleteCheckInResponse>> CompleteCheckIn()
+        {
+            try
+            {
+                var userId = await GetCurrentUserIdAsync();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("Unable to determine user identity");
+                }
+
+                var patient = await _context.Patients
+                    .Include(p => p.Consent)
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (patient == null)
+                {
+                    return BadRequest("Patient record not found.");
+                }
+
+                if (patient.Consent == null)
+                {
+                    return BadRequest("Consent is required to complete check-in.");
+                }
+
+                // Mark check-in as complete (you could add a flag to patient if needed)
+                // For now, we'll just return success since consent exists
+
+                return Ok(new CompleteCheckInResponse
+                {
+                    Success = true,
+                    Message = "Check-in completed successfully! Thank you.",
+                    PatientId = patient.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing check-in");
+                return StatusCode(500, new CompleteCheckInResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
+        }
     }
 
     // Model classes for API requests/responses
@@ -1202,7 +1926,6 @@ PREFERRED PHARMACY:
 
     public class PatientDetailResponse
     {
-        public Patient Patient { get; set; } = null!;
         public FormCompletionStatus CompletionStatus { get; set; } = new();
     }
 
@@ -1215,6 +1938,66 @@ PREFERRED PHARMACY:
         public bool HasMedications { get; set; }
         public bool HasAllergies { get; set; }
         public bool HasLifestyle { get; set; }
+        public bool HasVisitIntake { get; set; }
+        public bool HasConsent { get; set; }
         public bool OverallComplete { get; set; }
+    }
+
+    public class GetVisitIntakeResponse
+    {
+        public VisitIntakeDto? VisitIntake { get; set; }
+    }
+
+    public class SaveVisitIntakeResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int VisitIntakeId { get; set; }
+    }
+
+    public class VisitIntakeDto
+    {
+        public int Id { get; set; }
+        public string PrimaryReason { get; set; } = string.Empty;
+        public bool TreatedBefore { get; set; }
+    }
+
+    public class SaveVisitIntakeRequest
+    {
+        public VisitIntakeDto VisitIntake { get; set; } = new();
+    }
+
+    public class GetLifestyleResponse
+    {
+        public LifestyleDto? Lifestyle { get; set; }
+    }
+
+    public class SaveLifestyleResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class GetConsentResponse
+    {
+        public ConsentDto? Consent { get; set; }
+    }
+
+    public class SaveConsentRequest
+    {
+        public ConsentDto Consent { get; set; } = new();
+    }
+
+    public class SaveConsentResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class CompleteCheckInResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int PatientId { get; set; }
     }
 }

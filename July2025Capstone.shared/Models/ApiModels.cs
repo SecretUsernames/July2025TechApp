@@ -92,13 +92,96 @@ namespace July2025Capstone.Shared.Models
         public string Message { get; set; } = "";
     }
 
-    public class CheckinFormSummary
+    public class SaveConditionRequest
     {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public DateTime CreatedDate { get; set; }
-        public DateTime LastModified { get; set; }
-        public bool IsComplete { get; set; }
+        public PatientConditionDto Condition { get; set; } = new();
+    }
+
+    public class SaveConditionResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int ConditionId { get; set; }
+    }
+
+    public class DeleteConditionResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    public class SaveProcedureRequest
+    {
+        public ProcedureDto Procedure { get; set; } = new();
+    }
+
+    public class SaveProcedureResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int ProcedureId { get; set; }
+    }
+
+    public class DeleteProcedureResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    public class SaveVisitIntakeRequest
+    {
+        public VisitIntakeDto VisitIntake { get; set; } = new();
+    }
+
+    public class SaveVisitIntakeResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int VisitIntakeId { get; set; }
+    }
+
+    public class GetVisitIntakeResponse
+    {
+        public VisitIntakeDto? VisitIntake { get; set; }
+    }
+
+    public class SaveLifestyleRequest
+    {
+        public LifestyleDto Lifestyle { get; set; } = new();
+    }
+
+    public class SaveLifestyleResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    public class GetLifestyleResponse
+    {
+        public LifestyleDto? Lifestyle { get; set; }
+    }
+
+    public class SaveConsentRequest
+    {
+        public ConsentDto Consent { get; set; } = new();
+    }
+
+    public class SaveConsentResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    public class GetConsentResponse
+    {
+        public ConsentDto? Consent { get; set; }
+    }
+
+    public class CompleteCheckInResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int? PatientId { get; set; }
     }
 
     public class ApiResponse<T>

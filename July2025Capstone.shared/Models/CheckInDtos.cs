@@ -19,17 +19,16 @@ namespace July2025Capstone.Shared.Models
 
     public enum TobaccoUse
     {
-        Never = 0,
-        Former = 1,
-        Current = 2
+        No = 0,
+        Yes = 1,
+        Former = 2
     }
 
     public enum AlcoholUse
     {
-        Never = 0,
-        Occasional = 1,
-        Regular = 2,
-        Heavy = 3
+        No = 0,
+        Yes = 1,
+        Occasionally = 2
     }
 
     public enum DosageUnit
@@ -161,6 +160,58 @@ namespace July2025Capstone.Shared.Models
         public string Allergen { get; set; } = "";
     }
 
+    // Condition DTO for Patient Conditions
+    public class PatientConditionDto
+    {
+        public int Id { get; set; }
+        
+        [Required(ErrorMessage = "Condition name is required")]
+        [StringLength(200, ErrorMessage = "Condition name cannot be longer than 200 characters")]
+        public string ConditionName { get; set; } = "";
+    }
+
+    // Procedure DTO
+    public class ProcedureDto
+    {
+        public int Id { get; set; }
+        
+        [Required(ErrorMessage = "Procedure name is required")]
+        [StringLength(200, ErrorMessage = "Procedure name cannot be longer than 200 characters")]
+        public string ProcedureName { get; set; } = "";
+        
+        [Required(ErrorMessage = "Procedure date is required")]
+        public DateOnly ProcedureDate { get; set; }
+        
+        [StringLength(1000, ErrorMessage = "Notes cannot be longer than 1000 characters")]
+        public string Notes { get; set; } = "";
+    }
+
+    // Visit Intake DTO
+    public class VisitIntakeDto
+    {
+        public int Id { get; set; }
+        
+        [Required(ErrorMessage = "Primary reason for visit is required")]
+        [StringLength(500, ErrorMessage = "Primary reason cannot be longer than 500 characters")]
+        public string PrimaryReason { get; set; } = "";
+        
+        public bool TreatedBefore { get; set; } = false;
+    }
+
+    // Lifestyle/Substance Use DTOs and Enums
+    public class LifestyleDto
+    {
+        public int PatientId { get; set; }
+        
+        [Required(ErrorMessage = "Please specify your tobacco use")]
+        public TobaccoUse TobaccoUse { get; set; } = TobaccoUse.No;
+        
+        [Required(ErrorMessage = "Please specify your alcohol use")]
+        public AlcoholUse AlcoholUse { get; set; } = AlcoholUse.No;
+        
+        public bool RecreationalDrugs { get; set; } = false;
+    }
+
     // Medication DTO
     public class MedicationDto
     {
@@ -218,6 +269,25 @@ namespace July2025Capstone.Shared.Models
         }
     }
 
+    // Consent DTO
+    public class ConsentDto
+    {
+        public int Id { get; set; }
+        public int PatientId { get; set; }
+        
+        [Required(ErrorMessage = "You must provide consent to continue")]
+        public bool HasConsented { get; set; } = false;
+        
+        // Don't send SignedAt from client - let server set it
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+        public DateTime? SignedAt { get; set; }
+        
+        [StringLength(100, ErrorMessage = "Signature name cannot be longer than 100 characters")]
+        public string? SignatureName { get; set; }
+        
+        public string? PatientName { get; set; }
+    }
+
     // Complete Patient Form DTO
     public class PatientFormDto
     {
@@ -228,5 +298,7 @@ namespace July2025Capstone.Shared.Models
         public List<EmergencyContactDto> EmergencyContacts { get; set; } = new();
         public List<MedicationDto> Medications { get; set; } = new();
         public List<AllergyDto> Allergies { get; set; } = new();
+        public List<PatientConditionDto> Conditions { get; set; } = new();
+        public List<ProcedureDto> Procedures { get; set; } = new();
     }
 }

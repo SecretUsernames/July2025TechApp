@@ -16,11 +16,11 @@
     <!-- Progress Bar -->
     <div class="mb-4">
         <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted">Step 5 of 7</span>
+            <span class="text-muted">Step 5 of 8</span>
             <span class="text-muted">Emergency Contacts</span>
         </div>
         <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 71%"></div>
+            <div class="progress-bar" role="progressbar" style="width: 62.5%"></div>
         </div>
     </div>
 
@@ -103,7 +103,7 @@
             <span class="bi bi-arrow-left me-2"></span>Back
         </button>
         <button type="button" @onclick="Continue" class="btn btn-primary">
-            Continue to Medical History<span class="bi bi-arrow-right ms-2"></span>
+            Continue to Visit Information<span class="bi bi-arrow-right ms-2"></span>
         </button>
     </div>
 
@@ -465,6 +465,6 @@
 
     private void Continue()
     {
-        Navigation.NavigateTo("/checkin-form-creation/medical-history");
+        Navigation.NavigateTo("/checkin-form-creation/visit-intake");
     }
 }

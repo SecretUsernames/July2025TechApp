@@ -29,17 +29,21 @@ namespace July2025Capstone.Models
         public int PreferredContactMethod { get; set; } // enum: Phone=0, Email=1, Text=2
 
         // Navigation properties
-        public virtual ApplicationUser User { get; set; } = null!;
         public virtual Address? Address { get; set; }
-        public virtual ICollection<InsurancePolicy> InsurancePolicies { get; set; } = new List<InsurancePolicy>();
-        public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
-        public virtual Lifestyle? Lifestyle { get; set; }
-        public virtual ICollection<VisitIntake> VisitIntakes { get; set; } = new List<VisitIntake>();
-        public virtual ICollection<PatientCondition> PatientConditions { get; set; } = new List<PatientCondition>();
+        public virtual Pharmacy? PreferredPharmacy { get; set; }
+        public virtual ApplicationUser User { get; set; } = null!;
+        
+        // Collections
         public virtual ICollection<Medication> Medications { get; set; } = new List<Medication>();
         public virtual ICollection<Allergy> Allergies { get; set; } = new List<Allergy>();
+        public virtual ICollection<PatientCondition> PatientConditions { get; set; } = new List<PatientCondition>();
+        public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
+        public virtual ICollection<InsurancePolicy> InsurancePolicies { get; set; } = new List<InsurancePolicy>();
         public virtual ICollection<Procedure> Procedures { get; set; } = new List<Procedure>();
+        public virtual ICollection<VisitIntake> VisitIntakes { get; set; } = new List<VisitIntake>();
+        
+        // One-to-one relationships
+        public virtual Lifestyle? Lifestyle { get; set; }
         public virtual Consent? Consent { get; set; }
-        public virtual Pharmacy? PreferredPharmacy { get; set; }
     }
 }

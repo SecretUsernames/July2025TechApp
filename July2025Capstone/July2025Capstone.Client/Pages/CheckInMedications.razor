@@ -15,11 +15,11 @@
     <!-- Progress Bar -->
     <div class="mb-4">
         <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted">Step 2 of 7</span>
+            <span class="text-muted">Step 2 of 8</span>
             <span class="text-muted">Current Medications</span>
         </div>
         <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 29%"></div>
+            <div class="progress-bar" role="progressbar" style="width: 25%"></div>
         </div>
     </div>
 
@@ -100,7 +100,7 @@
             <span class="bi bi-arrow-left me-2"></span>Back
         </button>
         <button type="button" @onclick="Continue" class="btn btn-primary">
-            Continue to Allergies<span class="bi bi-arrow-right ms-2"></span>
+            Continue to Medical History<span class="bi bi-arrow-right ms-2"></span>
         </button>
     </div>
 
@@ -400,7 +400,7 @@
 
     private void Continue()
     {
-        Navigation.NavigateTo("/checkin-form-creation/allergies");
+        Navigation.NavigateTo("/checkin-form-creation/medical-history");
     }
 }
 

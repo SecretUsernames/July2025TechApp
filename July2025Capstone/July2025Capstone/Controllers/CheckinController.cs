@@ -188,7 +188,6 @@ namespace July2025Capstone.Controllers
 
                 var response = new PatientDetailResponse
                 {
-                    // Don't return the full Patient entity to avoid circular references
                     CompletionStatus = new FormCompletionStatus
                     {
                         HasPersonalInfo = !string.IsNullOrEmpty(patient.FirstName) && !string.IsNullOrEmpty(patient.LastName),
@@ -1890,7 +1889,6 @@ PREFERRED PHARMACY:
                 });
             }
         }
-    }
 
     // Model classes for API requests/responses
     public class CheckinUploadRequest
@@ -1955,13 +1953,6 @@ PREFERRED PHARMACY:
         public int VisitIntakeId { get; set; }
     }
 
-    public class VisitIntakeDto
-    {
-        public int Id { get; set; }
-        public string PrimaryReason { get; set; } = string.Empty;
-        public bool TreatedBefore { get; set; }
-    }
-
     public class SaveVisitIntakeRequest
     {
         public VisitIntakeDto VisitIntake { get; set; } = new();
@@ -1970,6 +1961,11 @@ PREFERRED PHARMACY:
     public class GetLifestyleResponse
     {
         public LifestyleDto? Lifestyle { get; set; }
+    }
+
+    public class SaveLifestyleRequest
+    {
+        public LifestyleDto Lifestyle { get; set; } = new();
     }
 
     public class SaveLifestyleResponse
@@ -1999,5 +1995,41 @@ PREFERRED PHARMACY:
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public int PatientId { get; set; }
+    }
+
+    public class SaveConditionRequest
+    {
+        public PatientConditionDto Condition { get; set; } = new();
+    }
+
+    public class SaveConditionResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int ConditionId { get; set; }
+    }
+
+    public class DeleteConditionResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class SaveProcedureRequest
+    {
+        public ProcedureDto Procedure { get; set; } = new();
+    }
+
+    public class SaveProcedureResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int ProcedureId { get; set; }
+    }
+
+    public class DeleteProcedureResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }

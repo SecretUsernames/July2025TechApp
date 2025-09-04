@@ -6,6 +6,7 @@ using July2025Capstone.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +20,15 @@ builder.Services.AddControllers();
 // HttpClient (SSR)
 builder.Services.AddHttpClient();
 
+<<<<<<< HEAD
 // CORS (single dev policy)
 const string DevCors = "DevCors";
+=======
+// Add Syncfusion Blazor service for server-side rendering
+builder.Services.AddSyncfusionBlazor();
+
+// Add CORS
+>>>>>>> c249c4c3691a4ea177a584ddd3525c7c76ceb1e5
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(DevCors, policy =>

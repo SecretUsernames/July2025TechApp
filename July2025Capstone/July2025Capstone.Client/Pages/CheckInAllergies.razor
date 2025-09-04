@@ -1,4 +1,4 @@
-@page "/checkin-form-creation/insurance"
+@page "/checkin-form-creation/allergies"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
 @using July2025Capstone.Shared.Models
@@ -10,30 +10,22 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @rendermode InteractiveWebAssembly
 
-<PageTitle>Insurance - Check-in Form</PageTitle>
+<PageTitle>Allergies - Check-in Form</PageTitle>
 
 <div class="container py-4">
     <!-- Progress Bar -->
     <div class="mb-4">
         <div class="d-flex align-items-center justify-content-between mb-2">
-<<<<<<< HEAD
-            <span class="text-muted">Step 4 of 8</span>
-            <span class="text-muted">Insurance Information</span>
+            <span class="text-muted">Step 3 of 7</span>
+            <span class="text-muted">Allergies & Reactions</span>
         </div>
         <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 50%"></div>
-=======
-            <span class="text-muted">Step 4 of 7</span>
-            <span class="text-muted">Insurance Information</span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 57%"></div>
->>>>>>> c249c4c3691a4ea177a584ddd3525c7c76ceb1e5
+            <div class="progress-bar" role="progressbar" style="width: 43%"></div>
         </div>
     </div>
 
-    <h3 class="mb-3">Insurance Information</h3>
-    <p class="text-muted">Please add your insurance policy details. You can add multiple insurance policies if needed.</p>
+    <h3 class="mb-3">Allergies & Reactions</h3>
+    <p class="text-muted">Please list all known allergies. If you have no known allergies, you can skip this step.</p>
 
     @if (!isAuthenticated)
     {
@@ -60,46 +52,37 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <!-- Add Insurance Button -->
+            <!-- Add Allergy Button -->
             <div class="mb-3">
                 <button type="button" class="btn btn-primary" @onclick="ShowAddDialog">
-                    <span class="bi bi-plus-circle me-2"></span>Add Insurance Policy
+                    <span class="bi bi-plus-circle me-2"></span>Add Allergy
                 </button>
             </div>
 
-            <!-- Insurance Policies Table -->
-            @if (insurancePolicies.Any())
+            <!-- Allergies Table -->
+            @if (allergies.Any())
             {
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Provider</th>
-                                <th>Policy Number</th>
-                                <th>Group Number</th>
-                                <th>Policyholder</th>
+                                <th>Allergen Name</th>
                                 <th width="120">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var insurance in insurancePolicies)
+                            @foreach (var allergy in allergies)
                             {
                                 <tr>
                                     <td>
-                                        <div class="fw-medium">@insurance.Provider</div>
-                                    </td>
-                                    <td>@insurance.PolicyNumber</td>
-                                    <td>@insurance.GroupNumber</td>
-                                    <td>
-                                        <div>@insurance.PolicyholderName</div>
-                                        <small class="text-muted">(@insurance.RelationshipToPatient)</small>
+                                        <div class="fw-medium">@allergy.Allergen</div>
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditInsurance(insurance)" title="Edit">
+                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditAllergy(allergy)" title="Edit">
                                                 <span class="bi bi-pencil"></span>
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteInsurance(insurance)" title="Delete">
+                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteAllergy(allergy)" title="Delete">
                                                 <span class="bi bi-trash"></span>
                                             </button>
                                         </div>
@@ -114,9 +97,9 @@
             {
                 <div class="text-center py-5">
                     <div class="text-muted">
-                        <span class="bi bi-shield-plus fs-1 d-block mb-3"></span>
-                        <h5>No insurance policies added yet</h5>
-                        <p class="mb-0">Click "Add Insurance Policy" to get started</p>
+                        <span class="bi bi-shield-check fs-1 d-block mb-3"></span>
+                        <h5>No allergies added yet</h5>
+                        <p class="mb-0">Click "Add Allergy" to get started, or continue if you have no known allergies</p>
                     </div>
                 </div>
             }
@@ -129,11 +112,11 @@
             <span class="bi bi-arrow-left me-2"></span>Back
         </button>
         <button type="button" @onclick="Continue" class="btn btn-primary">
-            Continue to Emergency Contacts<span class="bi bi-arrow-right ms-2"></span>
+            Continue to Insurance<span class="bi bi-arrow-right ms-2"></span>
         </button>
     </div>
 
-    <!-- Add/Edit Insurance Modal -->
+    <!-- Add/Edit Allergy Modal -->
     @if (showDialog)
     {
         <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -143,50 +126,16 @@
                         <h5 class="modal-title">@dialogTitle</h5>
                         <button type="button" class="btn-close" @onclick="CloseDialog"></button>
                     </div>
-                    <EditForm Model="currentInsurance" OnValidSubmit="SaveInsurance">
+                    <EditForm Model="currentAllergy" OnValidSubmit="SaveAllergy">
                         <DataAnnotationsValidator />
                         <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label">Insurance Provider *</label>
-                                    <InputText @bind-Value="currentInsurance.Provider" 
-                                               class="form-control" 
-                                               placeholder="e.g., Blue Cross Blue Shield, Aetna, United Healthcare" />
-                                    <ValidationMessage For="@(() => currentInsurance.Provider)" class="text-danger small mt-1" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Policy Number *</label>
-                                    <InputText @bind-Value="currentInsurance.PolicyNumber" 
-                                               class="form-control" 
-                                               placeholder="Policy number from insurance card" />
-                                    <ValidationMessage For="@(() => currentInsurance.PolicyNumber)" class="text-danger small mt-1" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Group Number *</label>
-                                    <InputText @bind-Value="currentInsurance.GroupNumber" 
-                                               class="form-control" 
-                                               placeholder="Group number from insurance card" />
-                                    <ValidationMessage For="@(() => currentInsurance.GroupNumber)" class="text-danger small mt-1" />
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="form-label">Policyholder Name *</label>
-                                    <InputText @bind-Value="currentInsurance.PolicyholderName" 
-                                               class="form-control" 
-                                               placeholder="Name of the person who holds the policy" />
-                                    <ValidationMessage For="@(() => currentInsurance.PolicyholderName)" class="text-danger small mt-1" />
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Relationship to Patient *</label>
-                                    <InputSelect @bind-Value="currentInsurance.RelationshipToPatient" class="form-select">
-                                        <option value="">-- Select --</option>
-                                        <option value="Self">Self</option>
-                                        <option value="Spouse">Spouse</option>
-                                        <option value="Parent">Parent</option>
-                                        <option value="Child">Child</option>
-                                        <option value="Other">Other</option>
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => currentInsurance.RelationshipToPatient)" class="text-danger small mt-1" />
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Allergen Name *</label>
+                                <InputText @bind-Value="currentAllergy.Allergen" 
+                                           class="form-control" 
+                                           placeholder="e.g., Peanuts, Penicillin, Pollen, Shellfish" />
+                                <ValidationMessage For="@(() => currentAllergy.Allergen)" class="text-danger small mt-1" />
+                                <div class="form-text">Enter the name of the substance you're allergic to</div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -196,7 +145,7 @@
                                 {
                                     <span class="spinner-border spinner-border-sm me-2"></span>
                                 }
-                                Save Insurance Policy
+                                Save Allergy
                             </button>
                         </div>
                     </EditForm>
@@ -221,10 +170,10 @@
 </div>
 
 @code {
-    private List<InsurancePolicyDto> insurancePolicies = new();
-    private InsurancePolicyDto currentInsurance = new();
+    private List<AllergyDto> allergies = new();
+    private AllergyDto currentAllergy = new();
     private bool showDialog = false;
-    private string dialogTitle = "Add Insurance Policy";
+    private string dialogTitle = "Add Allergy";
     private bool isLoading = false;
     private bool isAuthenticated = false;
     private string? errorMessage;
@@ -248,20 +197,20 @@
             Http.BaseAddress = new Uri("https://localhost:7014/");
         }
 
-        await LoadInsurance();
+        await LoadAllergies();
     }
 
-    private async Task LoadInsurance()
+    private async Task LoadAllergies()
     {
         try
         {
             isLoading = true;
-            var response = await Http.GetAsync("api/checkin/insurance");
+            var response = await Http.GetAsync("api/checkin/allergies");
             
             if (response.IsSuccessStatusCode)
             {
-                var insuranceList = await response.Content.ReadFromJsonAsync<List<InsurancePolicyDto>>();
-                insurancePolicies = insuranceList ?? new List<InsurancePolicyDto>();
+                var allergyList = await response.Content.ReadFromJsonAsync<List<AllergyDto>>();
+                allergies = allergyList ?? new List<AllergyDto>();
                 StateHasChanged();
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -275,12 +224,12 @@
             }
             else
             {
-                errorMessage = "An error occurred while loading your insurance policies. Please try again.";
+                errorMessage = "An error occurred while loading your allergies. Please try again.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading insurance policies: {ex.Message}";
+            errorMessage = $"Error loading allergies: {ex.Message}";
         }
         finally
         {
@@ -291,44 +240,40 @@
 
     private void ShowAddDialog()
     {
-        currentInsurance = new InsurancePolicyDto();
-        dialogTitle = "Add Insurance Policy";
+        currentAllergy = new AllergyDto();
+        dialogTitle = "Add Allergy";
         showDialog = true;
         ClearMessages();
     }
 
-    private void EditInsurance(InsurancePolicyDto? insurance)
+    private void EditAllergy(AllergyDto? allergy)
     {
-        if (insurance != null)
+        if (allergy != null)
         {
-            currentInsurance = new InsurancePolicyDto
+            currentAllergy = new AllergyDto
             {
-                Id = insurance.Id,
-                Provider = insurance.Provider,
-                PolicyNumber = insurance.PolicyNumber,
-                GroupNumber = insurance.GroupNumber,
-                PolicyholderName = insurance.PolicyholderName,
-                RelationshipToPatient = insurance.RelationshipToPatient
+                Id = allergy.Id,
+                Allergen = allergy.Allergen
             };
-            dialogTitle = "Edit Insurance Policy";
+            dialogTitle = "Edit Allergy";
             showDialog = true;
             ClearMessages();
         }
     }
 
-    private async Task DeleteInsurance(InsurancePolicyDto? insurance)
+    private async Task DeleteAllergy(AllergyDto? allergy)
     {
-        if (insurance != null && insurance.Id > 0)
+        if (allergy != null && allergy.Id > 0)
         {
             try
             {
                 ClearMessages();
-                var response = await Http.DeleteAsync($"api/checkin/insurance/{insurance.Id}");
+                var response = await Http.DeleteAsync($"api/checkin/allergy/{allergy.Id}");
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    successMessage = "Insurance policy deleted successfully!";
-                    await LoadInsurance();
+                    successMessage = "Allergy deleted successfully!";
+                    await LoadAllergies();
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                 {
@@ -336,38 +281,38 @@
                 }
                 else
                 {
-                    errorMessage = "An error occurred while deleting the insurance policy. Please try again.";
+                    errorMessage = "An error occurred while deleting the allergy. Please try again.";
                 }
             }
             catch (Exception ex)
             {
-                errorMessage = $"Error deleting insurance policy: {ex.Message}";
+                errorMessage = $"Error deleting allergy: {ex.Message}";
             }
         }
     }
 
-    private async Task SaveInsurance()
+    private async Task SaveAllergy()
     {
         try
         {
             isLoading = true;
             ClearMessages();
             
-            var request = new SaveInsuranceRequest { Insurance = currentInsurance };
-            var response = await Http.PostAsJsonAsync("api/checkin/save-insurance", request);
+            var request = new SaveAllergyRequest { Allergy = currentAllergy };
+            var response = await Http.PostAsJsonAsync("api/checkin/save-allergy", request);
             
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<SaveInsuranceResponse>();
+                var result = await response.Content.ReadFromJsonAsync<SaveAllergyResponse>();
                 if (result?.Success == true)
                 {
-                    successMessage = "Insurance policy saved successfully!";
+                    successMessage = "Allergy saved successfully!";
                     showDialog = false;
-                    await LoadInsurance();
+                    await LoadAllergies();
                 }
                 else
                 {
-                    errorMessage = result?.Message ?? "Failed to save insurance policy";
+                    errorMessage = result?.Message ?? "Failed to save allergy";
                 }
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
@@ -376,12 +321,12 @@
             }
             else
             {
-                errorMessage = "An error occurred while saving the insurance policy. Please try again.";
+                errorMessage = "An error occurred while saving the allergy. Please try again.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error saving insurance policy: {ex.Message}";
+            errorMessage = $"Error saving allergy: {ex.Message}";
         }
         finally
         {
@@ -444,12 +389,8 @@
     {
         return fieldName switch
         {
-            "Insurance.Provider" => "Insurance Provider",
-            "Insurance.PolicyNumber" => "Policy Number",
-            "Insurance.GroupNumber" => "Group Number",
-            "Insurance.PolicyholderName" => "Policyholder Name",
-            "Insurance.RelationshipToPatient" => "Relationship to Patient",
-            _ => fieldName.Replace("Insurance.", "")
+            "Allergy.Allergen" => "Allergen Name",
+            _ => fieldName.Replace("Allergy.", "")
         };
     }
 
@@ -468,15 +409,11 @@
 
     private void GoBack()
     {
-<<<<<<< HEAD
-        Navigation.NavigateTo("/checkin-form-creation/medical-history");
-=======
-        Navigation.NavigateTo("/checkin-form-creation/allergies");
->>>>>>> c249c4c3691a4ea177a584ddd3525c7c76ceb1e5
+        Navigation.NavigateTo("/checkin-form-creation/medications");
     }
 
     private void Continue()
     {
-        Navigation.NavigateTo("/checkin-form-creation/emergency-contacts");
+        Navigation.NavigateTo("/checkin-form-creation/insurance");
     }
 }

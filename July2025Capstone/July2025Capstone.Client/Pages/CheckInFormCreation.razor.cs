@@ -141,7 +141,7 @@ public partial class CheckInFormCreation : ComponentBase
                 statusMessage = new StatusMessage
                 {
                     IsSuccess = false,
-                    Message = "Unable to check existing forms. Please try again later."
+                    Message = "Unable to load form data. Please refresh the page or try again later."
                 };
             }
         }

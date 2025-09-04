@@ -1,4 +1,3 @@
-using Syncfusion.Blazor;
 using July2025Capstone.Client;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;

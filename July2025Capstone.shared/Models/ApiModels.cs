@@ -199,4 +199,4 @@ namespace July2025Capstone.Shared.Models
         public string Message { get; set; } = "";
         public T? Data { get; set; }
     }
-}}
+}

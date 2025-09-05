@@ -1,9 +1,11 @@
 @page "/"
 @using July2025Capstone.Client.Pages
 @using System.Net.Http.Json
+@using Microsoft.AspNetCore.Authorization
 @inject IJSRuntime JS
 @inject HttpClient Http
 @rendermode InteractiveWebAssembly
+@attribute [Authorize]
 
 <PageTitle>MedVault - Home</PageTitle>
 

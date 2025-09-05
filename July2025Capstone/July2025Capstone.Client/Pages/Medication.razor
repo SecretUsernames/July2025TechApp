@@ -119,8 +119,8 @@
                                     <label class="form-label">Dosage Strength *</label>
                                     <InputNumber @bind-Value="currentMedication.DosageStrength"
                                                  class="form-control"
-                                                 placeholder="0.000"
-                                                 step="0.001" />
+                                                 placeholder="0"
+                                                 step="0" />
                                     <ValidationMessage For="@(() => currentMedication.DosageStrength)" class="text-danger" />
                                 </div>
                                 <div class="col-md-6">

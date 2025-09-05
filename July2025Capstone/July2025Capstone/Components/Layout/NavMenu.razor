@@ -17,30 +17,46 @@
     <nav class="flex-column">
  
         <!-- Home -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <Authorized>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                </NavLink>
+            </div>
+            </Authorized>
+        </AuthorizeView>
  
         <!-- MedVault features (moved above Weather/Counter) -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="checkin-form-creation">
-                <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span> Check-in Form
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="medications">
-                <span class="bi bi-pentagon-fill" aria-hidden="true"></span> Medications
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="checkin-form-creation">
+                        <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span> Check-in Form
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        
+       <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="medications">
+                        <span class="bi bi-pentagon-fill" aria-hidden="true"></span> Medications
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
  
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="analytics">
-                <span class="bi bi-graph-up-arrow-nav-menu" aria-hidden="true"></span> Analytics
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="analytics">
+                        <span class="bi bi-graph-up-arrow-nav-menu" aria-hidden="true"></span> Analytics
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
  
         <!-- Auth -->
         <div class="nav-item px-3">

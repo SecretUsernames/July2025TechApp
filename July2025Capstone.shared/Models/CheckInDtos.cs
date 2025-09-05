@@ -235,8 +235,8 @@ namespace July2025Capstone.Shared.Models
 
         // Helper properties for display
         public string DosageDisplay => DosageUnit == DosageUnit.Other && !string.IsNullOrEmpty(CustomDosageUnit) 
-            ? $"{DosageStrength} {CustomDosageUnit}" 
-            : $"{DosageStrength} {GetDosageUnitString()}";
+            ? $"{DosageStrength:0.##} {CustomDosageUnit}" 
+            : $"{DosageStrength:0.##} {GetDosageUnitString()}";
 
         public string FrequencyDisplay => GetFrequencyString();
 

@@ -1,0 +1,249 @@
+﻿<PageTitle>Medications</PageTitle>
+
+@page "/medications"
+@rendermode InteractiveWebAssembly
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Navigations
+@using July2025Capstone.Shared
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using July2025Capstone.Shared.Models
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+
+<PageTitle>Medications</PageTitle>
+
+<div class="container py-4">
+
+    <h3 class="mb-3">Medications</h3>
+    <p class="text-muted">Please list all medications you are currently taking, including over-the-counter drugs and supplements.</p>
+
+    @if (!isAuthenticated)
+    {
+        <div class="alert alert-warning">
+            <h4>Authentication Required</h4>
+            <p>You need to be logged in to access this page.</p>
+            <a href="/Account/Login" class="btn btn-primary">Login</a>
+        </div>
+        return;
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Add Medication Button -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary" @onclick="ShowAddDialog">
+                    <span class="bi bi-plus-circle me-2"></span>Add Medication
+                </button>
+            </div>
+
+            <!-- Medications Table -->
+            @if (medications.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medication Name</th>
+                                <th>Dosage</th>
+                                <th>Frequency</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var medication in medications)
+                            {
+                                <tr>
+                                    <td>@medication.Name</td>
+                                    <td>@medication.DosageDisplay</td>
+                                    <td>@medication.FrequencyDisplay</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditMedication(medication)" title="Edit">
+                                                <span class="bi bi-pencil"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteMedication(medication)" title="Delete">
+                                                <span class="bi bi-trash"></span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="text-muted">
+                        <span class="bi bi-capsule fs-1 d-block mb-3"></span>
+                        <h5>No medications added yet</h5>
+                        <p class="mb-0">Click "Add Medication" to get started</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Add/Edit Medication Modal -->
+    @if (showDialog)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@dialogTitle</h5>
+                        <button type="button" class="btn-close" @onclick="CloseDialog"></button>
+                    </div>
+                    <EditForm Model="currentMedication" OnValidSubmit="SaveMedication">
+                        <DataAnnotationsValidator />
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Medication Name *</label>
+                                <InputText @bind-Value="currentMedication.Name"
+                                           class="form-control"
+                                           placeholder="Enter medication name" />
+                                <ValidationMessage For="@(() => currentMedication.Name)" class="text-danger" />
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Dosage Strength *</label>
+                                    <InputNumber @bind-Value="currentMedication.DosageStrength"
+                                                 class="form-control"
+                                                 placeholder="0"
+                                                 step="0" />
+                                    <ValidationMessage For="@(() => currentMedication.DosageStrength)" class="text-danger" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Unit *</label>
+                                    <InputSelect @bind-Value="currentMedication.DosageUnit" class="form-select">
+                                        <option value="">Select unit</option>
+                                        @foreach (var unit in dosageUnits)
+                                        {
+                                            <option value="@unit.Value">@unit.Text</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => currentMedication.DosageUnit)" class="text-danger" />
+                                </div>
+                            </div>
+
+                            @if (currentMedication.DosageUnit == DosageUnit.Other)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Custom Unit</label>
+                                    <InputText @bind-Value="currentMedication.CustomDosageUnit"
+                                               class="form-control"
+                                               placeholder="Enter custom unit" />
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label">Frequency *</label>
+                                <InputSelect @bind-Value="currentMedication.Frequency" class="form-select">
+                                    <option value="">Select frequency</option>
+                                    @foreach (var freq in frequencies)
+                                    {
+                                        <option value="@freq.Value">@freq.Text</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => currentMedication.Frequency)" class="text-danger" />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseDialog">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Save Medication
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success mt-3" role="alert">
+            @successMessage
+        </div>
+    }
+</div>
+
+
+<style>
+    /* Custom styles for medication page */
+    .table th {
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0.25rem;
+    }
+
+    .modal.show {
+        display: block !important;
+    }
+
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .bi-capsule {
+        color: #6c757d;
+    }
+
+    .progress-bar {
+        background-color: #0d6efd;
+    }
+
+    /* Improve form styling */
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Better button spacing */
+    .btn-group .btn + .btn {
+        margin-left: -1px;
+    }
+
+    /* Loading spinner alignment */
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+</style>
+

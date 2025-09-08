@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.7.1" />
     <PackageReference Include="Syncfusion.Blazor" Version="30.2.7" />
     <ProjectReference Include="..\..\July2025Capstone.shared\July2025Capstone.Shared.csproj" />
     <ProjectReference Include="..\July2025Capstone.Client\July2025Capstone.Client.csproj" />

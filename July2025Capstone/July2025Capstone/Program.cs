@@ -3,6 +3,7 @@ using July2025Capstone.Client.Pages;
 using July2025Capstone.Components;
 using July2025Capstone.Components.Account;
 using July2025Capstone.Data;
+using July2025Capstone.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,9 @@ builder.Services.AddHttpClient("OpenAI", client =>
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", key);
     client.Timeout = TimeSpan.FromSeconds(60);
 });
+
+// PDF Generation Service
+builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 

@@ -286,9 +286,34 @@ public partial class CheckInFormCreation : ComponentBase
         }
     }
 
+    private bool AreAllRequiredSectionsComplete()
+    {
+        if (completionStatus == null) return false;
+        
+        return completionStatus.HasPersonalInfo && 
+               completionStatus.HasAddress && 
+               completionStatus.HasInsurance && 
+               completionStatus.HasEmergencyContacts && 
+               completionStatus.HasLifestyle && 
+               completionStatus.HasVisitIntake && 
+               completionStatus.HasConsent;
+    }
+
     private async Task GenerateCheckInPdf()
     {
         if (existingFormSummary == null) return;
+
+        // Check if all required sections are completed before generating PDF
+        if (!AreAllRequiredSectionsComplete())
+        {
+            statusMessage = new StatusMessage
+            {
+                IsSuccess = false,
+                Message = "Please complete all required sections before generating the PDF. Check the summary above to see which sections need attention."
+            };
+            StateHasChanged();
+            return;
+        }
 
         isLoading = true;
         statusMessage = null;
@@ -300,11 +325,15 @@ public partial class CheckInFormCreation : ComponentBase
             
             if (response.IsSuccessStatusCode)
             {
-                // Download the PDF
+                // Get the PDF bytes from the response
                 var pdfBytes = await response.Content.ReadAsByteArrayAsync();
+                
+                // Convert to base64 for JavaScript
+                var base64Content = Convert.ToBase64String(pdfBytes);
                 var fileName = $"CheckInForm_{DateTime.Now:yyyyMMdd}.pdf";
                 
-                await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "application/pdf", pdfBytes);
+                // Call JavaScript function to download the file
+                await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "application/pdf", base64Content);
                 
                 statusMessage = new StatusMessage
                 {
@@ -320,6 +349,15 @@ public partial class CheckInFormCreation : ComponentBase
                 // User session expired, redirect to login
                 Navigation.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}", forceLoad: true);
                 return;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                statusMessage = new StatusMessage
+                {
+                    IsSuccess = false,
+                    Message = $"Cannot generate PDF: {errorContent}"
+                };
             }
             else
             {

@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using July2025Capstone.Data;
-using July2025Capstone.Models; // Add this to use SharedModels
+using July2025Capstone.Models;
 
 namespace July2025Capstone.Controllers
 {
@@ -40,6 +41,81 @@ namespace July2025Capstone.Controllers
                 };
 
                 return Ok(uploads);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("vitals/blood-pressure")]
+        public async Task<ActionResult<List<VitalBloodPressure>>> GetBloodPressureData()
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var bloodPressureData = await _context.VitalBloodPressures
+                    .Where(bp => bp.UserId == userId)
+                    .OrderBy(bp => bp.DateMeasured)
+                    .Take(30) // Last 30 readings
+                    .ToListAsync();
+
+                return Ok(bloodPressureData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("vitals/glucose")]
+        public async Task<ActionResult<List<VitalGlucose>>> GetGlucoseData()
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var glucoseData = await _context.VitalGlucoses
+                    .Where(g => g.UserId == userId)
+                    .OrderBy(g => g.DateMeasured)
+                    .Take(30) // Last 30 readings
+                    .ToListAsync();
+
+                return Ok(glucoseData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("vitals/weight")]
+        public async Task<ActionResult<List<VitalWeight>>> GetWeightData()
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var weightData = await _context.VitalWeights
+                    .Where(w => w.UserId == userId)
+                    .OrderBy(w => w.DateMeasured)
+                    .Take(30) // Last 30 readings
+                    .ToListAsync();
+
+                return Ok(weightData);
             }
             catch (Exception ex)
             {

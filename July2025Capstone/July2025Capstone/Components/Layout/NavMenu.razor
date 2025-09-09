@@ -1,4 +1,5 @@
-@implements IDisposable
+﻿@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
 @using Syncfusion.Blazor.Buttons
 @inject NavigationManager NavigationManager
  
@@ -15,19 +16,18 @@
  
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
- 
         <!-- Home -->
         <AuthorizeView>
             <Authorized>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-                </NavLink>
-            </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
             </Authorized>
         </AuthorizeView>
  
-        <!-- MedVault features (moved above Weather/Counter) -->
+        <!-- Check-in Form -->
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
@@ -38,7 +38,8 @@
             </Authorized>
         </AuthorizeView>
         
-       <AuthorizeView>
+        <!-- Medications -->
+        <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="medications">
@@ -48,6 +49,7 @@
             </Authorized>
         </AuthorizeView>
  
+        <!-- Analytics -->
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
@@ -56,6 +58,20 @@
                     </NavLink>
                 </div>
             </Authorized>
+        </AuthorizeView>
+
+        <!-- Admin Panel (Admins only) -->
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/admin" Match="NavLinkMatch.Prefix">
+                        <span class="bi bi-gear-wide-connected-nav-menu" aria-hidden="true"></span> Admin Panel
+                    </NavLink>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                @* Hidden for non-admins *@
+            </NotAuthorized>
         </AuthorizeView>
  
         <!-- Auth -->

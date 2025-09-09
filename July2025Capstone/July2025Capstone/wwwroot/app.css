@@ -240,3 +240,40 @@
   color: #64748b;
   padding: 6px 10px 12px;
 }
+
+/* Stretched Chart Styling */
+.stretched-chart {
+  width: 100% !important;
+  height: 400px !important;
+  overflow: hidden;
+  display: block !important;
+}
+
+.stretched-chart .e-chart,
+.stretched-chart .e-control,
+.stretched-chart .e-chart-control {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+}
+
+.stretched-chart svg {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+}
+
+.card-body {
+  overflow-x: auto;
+}
+
+/* Force Syncfusion chart to fill container */
+.stretched-chart > .e-control.e-chart {
+  width: 100% !important;
+  height: 400px !important;
+}
+
+.stretched-chart .e-chart svg {
+  width: 100% !important;
+  height: 400px !important;
+}

@@ -9,15 +9,21 @@ namespace July2025Capstone.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AnalyticsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<AnalyticsController> _logger;
 
-        public AnalyticsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public AnalyticsController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            ILogger<AnalyticsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [HttpGet("recent-uploads")]
@@ -53,22 +59,43 @@ namespace July2025Capstone.Controllers
         {
             try
             {
+                _logger.LogInformation("GetBloodPressureData called");
+                // Get both ID and email
                 var userId = _userManager.GetUserId(User);
-                if (string.IsNullOrEmpty(userId))
+                var userEmail = User.Identity?.Name;
+                
+                _logger.LogInformation($"User ID from UserManager: {userId}");
+                _logger.LogInformation($"User Email from Claims: {userEmail}");
+                _logger.LogInformation($"Claims: {string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"))}");
+
+                if (string.IsNullOrEmpty(userEmail))
                 {
+                    _logger.LogWarning("User email is null or empty");
                     return Unauthorized();
                 }
 
+                // Query using user ID
                 var bloodPressureData = await _context.VitalBloodPressures
                     .Where(bp => bp.UserId == userId)
                     .OrderBy(bp => bp.DateMeasured)
                     .Take(30) // Last 30 readings
                     .ToListAsync();
 
+                _logger.LogInformation($"Found {bloodPressureData.Count} blood pressure readings for user {userId}");
+                
+                // Log the first few readings if any exist
+                if (bloodPressureData.Any())
+                {
+                    _logger.LogInformation("Sample readings: " + 
+                        string.Join(", ", bloodPressureData.Take(3)
+                            .Select(bp => $"{{Id={bp.Id}, Systolic={bp.Systolic}, Diastolic={bp.Diastolic}}}")));
+                }
+
                 return Ok(bloodPressureData);
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error in GetBloodPressureData: {ex}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
@@ -91,6 +118,115 @@ namespace July2025Capstone.Controllers
                     .ToListAsync();
 
                 return Ok(glucoseData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("vitals/blood-pressure")]
+        public async Task<ActionResult<VitalBloodPressure>> AddBloodPressureReading([FromBody] VitalBloodPressure reading)
+        {
+            try
+            {
+                _logger.LogInformation($"Received blood pressure reading: Systolic={reading.Systolic}, Diastolic={reading.Diastolic}");
+
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Model state is invalid: " + string.Join(", ", ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)));
+                    return BadRequest(ModelState);
+                }
+
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("User not authenticated");
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation($"User ID from UserManager: {userId}");
+
+                reading.UserId = userId;
+                _context.VitalBloodPressures.Add(reading);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully saved blood pressure reading with ID: {reading.Id}");
+                return Ok(reading);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error saving blood pressure reading: {ex}");
+                return StatusCode(500, "Internal server error while saving blood pressure reading");
+            }
+        }
+
+        [HttpPost("vitals/glucose")]
+        public async Task<ActionResult<VitalGlucose>> AddGlucoseReading([FromBody] VitalGlucose reading)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                // Create a new entity and copy only the needed properties
+                var newReading = new VitalGlucose
+                {
+                    UserId = userId,
+                    GlucoseValue = reading.GlucoseValue,
+                    DateMeasured = reading.DateMeasured
+                };
+
+                _context.VitalGlucoses.Add(newReading);
+                await _context.SaveChangesAsync();
+
+                return Ok(newReading);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("vitals/weight")]
+        public async Task<ActionResult<VitalWeight>> AddWeightReading([FromBody] VitalWeight reading)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                // Create a new entity and copy only the needed properties
+                var newReading = new VitalWeight
+                {
+                    UserId = userId,
+                    WeightValue = reading.WeightValue,
+                    Unit = reading.Unit,
+                    DateMeasured = reading.DateMeasured
+                };
+
+                _context.VitalWeights.Add(newReading);
+                await _context.SaveChangesAsync();
+
+                return Ok(newReading);
             }
             catch (Exception ex)
             {

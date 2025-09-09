@@ -134,21 +134,24 @@ namespace July2025Capstone.Data
 
             // Vital Signs relationships
             modelBuilder.Entity<VitalWeight>()
-                .HasOne(vw => vw.User)
+                .HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(vw => vw.UserId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<VitalBloodPressure>()
-                .HasOne(vbp => vbp.User)
+                .HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(vbp => vbp.UserId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<VitalGlucose>()
-                .HasOne(vg => vg.User)
+                .HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(vg => vg.UserId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure decimal precision

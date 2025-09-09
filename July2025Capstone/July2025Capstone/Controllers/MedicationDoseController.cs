@@ -39,8 +39,8 @@ namespace July2025Capstone.Controllers
         {
             var dose = await _context.MedicationDoses.FirstOrDefaultAsync(d =>
                 d.MedicationId == request.MedicationId &&
-                d.DayOfWeek == request.DayOfWeek); //&&
-                //d.TimeOfDay == request.TimeOfDay); //this is always 0, which may be the issue
+                d.DayOfWeek == request.DayOfWeek &&
+                d.TimeOfDay == request.TimeOfDay); //this is always 0, which may be the issue
 
             if (dose == null)
             {

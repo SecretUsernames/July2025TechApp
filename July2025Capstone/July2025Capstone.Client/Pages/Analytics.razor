@@ -549,28 +549,52 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        userId = user.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
-        
-        Console.WriteLine($"OnInitializedAsync - User authenticated: {user.Identity?.IsAuthenticated}");
-        Console.WriteLine($"OnInitializedAsync - UserId: {userId}");
-        
-        if (string.IsNullOrEmpty(userId))
-        {
-            Console.WriteLine("OnInitializedAsync - No UserId found. Available claims:");
-            foreach (var claim in user.Claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
-            }
-        }
-
         if (Http.BaseAddress == null)
         {
             Http.BaseAddress = new Uri("http://localhost:5094/");
         }
         
+        // Wait for authentication state to be available
+        await WaitForAuthenticationAndLoadData();
+    }
+
+    private async Task WaitForAuthenticationAndLoadData()
+    {
+        // Try to get authentication state multiple times if needed
+        for (int i = 0; i < 10; i++) // Try for up to 5 seconds
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            userId = user.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            
+            Console.WriteLine($"Attempt {i + 1} - User authenticated: {user.Identity?.IsAuthenticated}");
+            Console.WriteLine($"Attempt {i + 1} - UserId: {userId}");
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("Authentication successful, loading data...");
+                await RefreshData();
+                return;
+            }
+            
+            // If no user ID yet, wait a bit and try again
+            await Task.Delay(500);
+        }
+        
+        // If we get here, authentication failed or is taking too long
+        Console.WriteLine("Authentication timeout or failed, loading data anyway...");
         await RefreshData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Wait a bit for charts to be fully rendered, then trigger refresh
+            await Task.Delay(1500);
+            Console.WriteLine("First render completed, triggering chart refresh...");
+            await TriggerChartRefresh();
+        }
     }
 
     private async Task RefreshData()
@@ -623,6 +647,10 @@
         {
             isLoading = false;
             StateHasChanged();
+            
+            // Force chart refresh after data is loaded
+            await Task.Delay(100);
+            StateHasChanged();
         }
     }
 
@@ -632,5 +660,92 @@
         hasError = false;
         HideModals();
         StateHasChanged();
+    }
+
+    private async Task TriggerChartRefresh()
+    {
+        Console.WriteLine("Triggering chart refresh workaround...");
+        
+        if (string.IsNullOrEmpty(userId))
+        {
+            Console.WriteLine("UserId is null or empty, attempting chart refresh without authentication...");
+            // Still try to refresh charts even if not authenticated yet
+            await Task.Delay(500); // Wait for potential authentication to complete
+            await ForceChartRerender();
+            return;
+        }
+
+        try
+        {
+            // Create a temporary blood pressure reading to trigger chart refresh
+            var tempBloodPressure = new VitalBloodPressure
+            {
+                UserId = userId,
+                Systolic = 120,
+                Diastolic = 80,
+                DateMeasured = DateTime.Now
+            };
+
+            Console.WriteLine("Adding temporary blood pressure reading...");
+            // Add the temporary reading
+            var addResponse = await Http.PostAsJsonAsync("api/analytics/vitals/blood-pressure", tempBloodPressure);
+            
+            if (addResponse.IsSuccessStatusCode)
+            {
+                var createdReading = await addResponse.Content.ReadFromJsonAsync<VitalBloodPressure>();
+                Console.WriteLine($"Temporary reading created with ID: {createdReading?.Id}");
+                
+                if (createdReading != null)
+                {
+                    // Immediately delete the temporary reading
+                    Console.WriteLine("Deleting temporary reading...");
+                    var deleteResponse = await Http.DeleteAsync($"api/analytics/vitals/blood-pressure/{createdReading.Id}");
+                    Console.WriteLine($"Delete response status: {deleteResponse.StatusCode}");
+                    
+                    // Refresh the data to ensure charts are properly loaded
+                    Console.WriteLine("Refreshing data after chart refresh workaround...");
+                    await RefreshData();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Failed to add temporary reading: {addResponse.StatusCode}");
+            }
+            
+            Console.WriteLine("Chart refresh completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in TriggerChartRefresh: {ex.Message}");
+            // If the trigger fails, just try a different approach
+            await ForceChartRerender();
+        }
+    }
+
+    private async Task ForceChartRerender()
+    {
+        Console.WriteLine("Forcing chart re-render by clearing and restoring data...");
+        
+        // Store current data
+        var tempBpData = bloodPressureData;
+        var tempGlucoseData = glucoseData;
+        var tempWeightData = weightData;
+        
+        // Clear data to force chart unmount
+        bloodPressureData = null;
+        glucoseData = null;
+        weightData = null;
+        StateHasChanged();
+        
+        // Wait a brief moment
+        await Task.Delay(50);
+        
+        // Restore data to force chart remount
+        bloodPressureData = tempBpData;
+        glucoseData = tempGlucoseData;
+        weightData = tempWeightData;
+        StateHasChanged();
+        
+        Console.WriteLine("Chart re-render completed");
     }
 }

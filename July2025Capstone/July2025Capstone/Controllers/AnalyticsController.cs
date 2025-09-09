@@ -163,6 +163,39 @@ namespace July2025Capstone.Controllers
             }
         }
 
+        [HttpDelete("vitals/blood-pressure/{id}")]
+        public async Task<ActionResult> DeleteBloodPressureReading(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Chart refresh triggered for user {_userManager.GetUserId(User)}");
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var reading = await _context.VitalBloodPressures
+                    .FirstOrDefaultAsync(bp => bp.Id == id && bp.UserId == userId);
+
+                if (reading == null)
+                {
+                    return NotFound();
+                }
+
+                _context.VitalBloodPressures.Remove(reading);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully deleted blood pressure reading with ID: {id}");
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting blood pressure reading: {ex}");
+                return StatusCode(500, "Internal server error while deleting blood pressure reading");
+            }
+        }
+
         [HttpPost("vitals/glucose")]
         public async Task<ActionResult<VitalGlucose>> AddGlucoseReading([FromBody] VitalGlucose reading)
         {

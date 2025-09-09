@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Net.Http.Json;
 
+
 namespace July2025Capstone.Client.Pages
 {
     public partial class Medication
@@ -305,26 +306,35 @@ namespace July2025Capstone.Client.Pages
         */
         private async Task ToggleDoseAsync(int medicationId, int dayOfWeek, TimeOfDay timeOfDay)
         {
-            var request = new ToggleDoseRequest
+            try
             {
-                MedicationId = medicationId,
-                DayOfWeek = dayOfWeek,
-                TimeOfDay = timeOfDay
-            };
+                var request = new ToggleDoseRequest
+                {
+                    MedicationId = medicationId,
+                    DayOfWeek = dayOfWeek,
+                    TimeOfDay = timeOfDay
+                };
 
-            var response = await Http.PostAsJsonAsync("api/medicationdose/toggle", request);
+                var response = await Http.PostAsJsonAsync("api/medicationdose/toggle", request);
 
-            if (response.IsSuccessStatusCode)
-            {
-                // Refresh doses after toggling
-                await LoadDosesAsync(medicationId);
-                UpdateStats();
-                StateHasChanged();
+                if (response.IsSuccessStatusCode)
+                {
+                    // Refresh doses after toggling
+                    await LoadDosesAsync(medicationId);
+                    UpdateStats();
+                    StateHasChanged();
+                }
+                else
+                {
+                    Console.WriteLine("Failed to toggle dose.");
+                }
             }
-            else
+            catch (Exception e)
             {
-                Console.WriteLine("Failed to toggle dose.");
+                Console.WriteLine("Error calling API for medication dose.");
+                throw;
             }
+           
         }
 
         /*

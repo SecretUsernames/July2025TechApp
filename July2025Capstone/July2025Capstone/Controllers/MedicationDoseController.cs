@@ -34,12 +34,13 @@ namespace July2025Capstone.Controllers
 
         // POST: api/MedicationDose/toggle
         [HttpPost("toggle")]
+        [HttpPost("api/medicationdose/toggle")]
         public async Task<IActionResult> ToggleDose([FromBody] ToggleDoseRequest request)
         {
             var dose = await _context.MedicationDoses.FirstOrDefaultAsync(d =>
                 d.MedicationId == request.MedicationId &&
-                d.DayOfWeek == request.DayOfWeek &&
-                d.TimeOfDay == request.TimeOfDay);
+                d.DayOfWeek == request.DayOfWeek); //&&
+                //d.TimeOfDay == request.TimeOfDay); //this is always 0, which may be the issue
 
             if (dose == null)
             {

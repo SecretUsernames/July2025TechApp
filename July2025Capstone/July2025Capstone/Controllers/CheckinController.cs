@@ -6,6 +6,7 @@ using July2025Capstone.Models;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using July2025Capstone.Shared.Models;
+using July2025Capstone.Client.Pages;
 
 namespace July2025Capstone.Controllers
 {
@@ -619,7 +620,7 @@ PREFERRED PHARMACY:
                 else
                 {
                     // Create new medication
-                    var newMedication = new Medication
+                    var newMedication = new July2025Capstone.Models.Medication
                     {
                         PatientId = patient.Id,
                         Name = request.Medication.Name,
@@ -630,6 +631,32 @@ PREFERRED PHARMACY:
                     };
 
                     _context.Medications.Add(newMedication);
+                    await _context.SaveChangesAsync();
+
+                    //Initialize doses
+                    var doses = MedicationTracker.InitializeDoses(new List<MedicationDto>
+                    {
+                        new MedicationDto
+                        {
+                            Id = newMedication.Id,
+                            Frequency = (Shared.Models.MedicationFrequency)newMedication.Frequency
+                        }
+                    });
+
+                    
+
+                    // Convert shared doses to EF model doses
+                    var efDoses = doses.Select(d => new Models.MedicationDose
+                    {
+                        MedicationId = d.MedicationId,
+                        DayOfWeek = d.DayOfWeek,
+                        TimeOfDay = d.TimeOfDay,
+                        Taken = d.Taken,
+                        TakenAt = d.TakenAt
+                    }).ToList();
+
+
+                    _context.MedicationDoses.AddRange(efDoses);
                 }
 
                 await _context.SaveChangesAsync();

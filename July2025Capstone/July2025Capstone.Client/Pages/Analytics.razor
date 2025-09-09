@@ -29,9 +29,10 @@
     }
 </style>
 
-<div class="container-fluid py-3">
-    <h3 class="mb-3">Health Analytics</h3>
-    <p class="text-muted">Your health trends over time</p>
+<div class="analytics-page">
+    <div class="container-fluid py-3">
+        <h2 class="mb-3">Health Analytics</h2>
+        <p class="text-muted">Your health trends over time</p>
 
     @if (isLoading)
     {
@@ -73,13 +74,14 @@
                         {
                             <div class="stretched-chart">
                                 <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
-                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd/yyyy" />
+                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="M/d" />
                                     <ChartPrimaryYAxis Title="mmHg" Minimum="60" Maximum="180" />
                                 <ChartSeriesCollection>
                                     <ChartSeries DataSource="@bloodPressureData"
                                               XName="DateMeasured"
                                               YName="Systolic"
                                               Name="Systolic"
+                                              Fill="#2563eb"
                                               Type="@Charts.ChartSeriesType.Line">
                                         <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
                                     </ChartSeries>
@@ -87,6 +89,7 @@
                                               XName="DateMeasured"
                                               YName="Diastolic"
                                               Name="Diastolic"
+                                              Fill="#7c3aed"
                                               Type="@Charts.ChartSeriesType.Line">
                                         <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
                                     </ChartSeries>
@@ -118,13 +121,14 @@
                         {
                             <div class="stretched-chart">
                                 <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
-                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd/yyyy" />
+                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="M/d" />
                                     <ChartPrimaryYAxis Title="mg/dL" Minimum="60" Maximum="200" />
                                     <ChartSeriesCollection>
                                         <ChartSeries DataSource="@glucoseData"
                                                   XName="DateMeasured"
                                                   YName="GlucoseValue"
                                                   Name="Glucose"
+                                                  Fill="#059669"
                                                   Type="@Syncfusion.Blazor.Charts.ChartSeriesType.Line">
                                             <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
                                         </ChartSeries>
@@ -156,13 +160,14 @@
                         {
                             <div class="stretched-chart">
                                 <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
-                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd/yyyy" />
+                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="M/d" />
                                     <ChartPrimaryYAxis Title="Weight" />
                                     <ChartSeriesCollection>
                                         <ChartSeries DataSource="@weightData"
                                                   XName="DateMeasured"
                                                   YName="WeightValue"
                                                   Name="Weight"
+                                                  Fill="#dc2626"
                                                   Type="@Syncfusion.Blazor.Charts.ChartSeriesType.Line">
                                             <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
                                         </ChartSeries>
@@ -182,6 +187,7 @@
             </div>
         </div>
     }
+    </div>
 </div>
 
 @* Blood Pressure Modal *@

@@ -74,24 +74,25 @@
                         {
                             <div class="stretched-chart">
                                 <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
-                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="M/d" />
+                                    <ChartPrimaryXAxis ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd" />
                                     <ChartPrimaryYAxis Title="mmHg" Minimum="60" Maximum="180" />
+                                    <ChartLegendSettings Position="@Syncfusion.Blazor.Charts.LegendPosition.Bottom" Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></ChartLegendSettings>
                                 <ChartSeriesCollection>
                                     <ChartSeries DataSource="@bloodPressureData"
                                               XName="DateMeasured"
                                               YName="Systolic"
                                               Name="Systolic"
-                                              Fill="#2563eb"
+                                              Fill="#667eea"
                                               Type="@Charts.ChartSeriesType.Line">
-                                        <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
+                                        <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
                                     </ChartSeries>
                                     <ChartSeries DataSource="@bloodPressureData"
                                               XName="DateMeasured"
                                               YName="Diastolic"
                                               Name="Diastolic"
-                                              Fill="#7c3aed"
+                                              Fill="#764ba2"
                                               Type="@Charts.ChartSeriesType.Line">
-                                        <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
+                                        <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
                                     </ChartSeries>
                                 </ChartSeriesCollection>
                                 </SfChart>
@@ -121,16 +122,17 @@
                         {
                             <div class="stretched-chart">
                                 <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
-                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="M/d" />
+                                    <ChartPrimaryXAxis ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd" />
                                     <ChartPrimaryYAxis Title="mg/dL" Minimum="60" Maximum="200" />
+                                    <ChartLegendSettings Position="@Syncfusion.Blazor.Charts.LegendPosition.Bottom" Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></ChartLegendSettings>
                                     <ChartSeriesCollection>
                                         <ChartSeries DataSource="@glucoseData"
                                                   XName="DateMeasured"
                                                   YName="GlucoseValue"
                                                   Name="Glucose"
-                                                  Fill="#059669"
+                                                  Fill="#48bb78"
                                                   Type="@Syncfusion.Blazor.Charts.ChartSeriesType.Line">
-                                            <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
+                                            <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
                                         </ChartSeries>
                                     </ChartSeriesCollection>
                                 </SfChart>
@@ -160,16 +162,17 @@
                         {
                             <div class="stretched-chart">
                                 <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
-                                    <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="M/d" />
+                                    <ChartPrimaryXAxis ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd" />
                                     <ChartPrimaryYAxis Title="Weight" />
+                                    <ChartLegendSettings Position="@Syncfusion.Blazor.Charts.LegendPosition.Bottom" Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></ChartLegendSettings>
                                     <ChartSeriesCollection>
                                         <ChartSeries DataSource="@weightData"
                                                   XName="DateMeasured"
                                                   YName="WeightValue"
                                                   Name="Weight"
-                                                  Fill="#dc2626"
+                                                  Fill="#ed64a6"
                                                   Type="@Syncfusion.Blazor.Charts.ChartSeriesType.Line">
-                                            <ChartMarker Visible="true" Height="7" Width="7"></ChartMarker>
+                                            <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
                                         </ChartSeries>
                                     </ChartSeriesCollection>
                                 </SfChart>

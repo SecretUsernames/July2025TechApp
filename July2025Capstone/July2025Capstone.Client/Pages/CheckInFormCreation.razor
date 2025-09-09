@@ -271,10 +271,39 @@ else
             <div class="col-md-8">
                 <div class="card shadow-sm">
                     <div class="card-body">
+                        @{
+                            var allRequiredComplete = completionStatus != null && 
+                                completionStatus.HasPersonalInfo && 
+                                completionStatus.HasAddress && 
+                                completionStatus.HasInsurance && 
+                                completionStatus.HasEmergencyContacts && 
+                                completionStatus.HasLifestyle && 
+                                completionStatus.HasVisitIntake && 
+                                completionStatus.HasConsent;
+                        }
+                        
                         <div class="d-flex align-items-center mb-3">
-                            <span class="bi bi-check-circle-fill text-success me-2 fs-4"></span>
-                            <h5 class="card-title mb-0">Your Check-in Form is Ready</h5>
+                            @if (allRequiredComplete)
+                            {
+                                <span class="bi bi-check-circle-fill text-success me-2 fs-4"></span>
+                                <h5 class="card-title mb-0">Your Check-in Form is Complete</h5>
+                            }
+                            else
+                            {
+                                <span class="bi bi-exclamation-triangle-fill text-warning me-2 fs-4"></span>
+                                <h5 class="card-title mb-0">Your Check-in Form Needs Attention</h5>
+                            }
                         </div>
+                        
+                        @if (!allRequiredComplete)
+                        {
+                            <div class="alert alert-warning mb-3">
+                                <small class="mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Complete all required sections above to generate your PDF.
+                                </small>
+                            </div>
+                        }
                         
                         @if (existingFormSummary != null)
                         {
@@ -297,13 +326,24 @@ else
                         }
                         
                         <div class="d-grid gap-2 d-md-flex">
-                            <button class="btn btn-success flex-fill" @onclick="GenerateCheckInPdf" disabled="@(isLoading || isEditingForm)">
+                            <button class="btn @(allRequiredComplete ? "btn-success" : "btn-outline-secondary") flex-fill" 
+                                    @onclick="GenerateCheckInPdf" 
+                                    disabled="@(isLoading || isEditingForm || !allRequiredComplete)"
+                                    title="@(allRequiredComplete ? "Generate your check-in PDF" : "Complete all required sections to generate PDF")">
                                 <span class="bi bi-file-earmark-pdf me-2"></span>
                                 @if (isLoading)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                 }
+                                @if (!allRequiredComplete)
+                                {
+                                    <span class="bi bi-exclamation-triangle me-2"></span>
+                                }
                                 Generate Check-in PDF
+                                @if (!allRequiredComplete)
+                                {
+                                    <small class="d-block mt-1">Complete required sections first</small>
+                                }
                             </button>
                             <button class="btn btn-outline-primary flex-fill" @onclick="EditForm" disabled="@(isLoading || isEditingForm)">
                                 @if (isEditingForm)
@@ -322,15 +362,30 @@ else
             </div>
             
             <div class="col-md-4">
-                <div class="card border-info">
-                    <div class="card-body text-center">
-                        <span class="bi bi-info-circle text-info fs-2"></span>
-                        <h6 class="card-title mt-2">Quick Tip</h6>
-                        <p class="card-text small">
-                            Generate your PDF before your appointment and bring it with you for faster check-in.
-                        </p>
+                @if (allRequiredComplete)
+                {
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <span class="bi bi-info-circle text-info fs-2"></span>
+                            <h6 class="card-title mt-2">Ready to Go!</h6>
+                            <p class="card-text small">
+                                Your form is complete. Generate your PDF before your appointment and bring it with you for faster check-in.
+                            </p>
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <span class="bi bi-exclamation-triangle text-warning fs-2"></span>
+                            <h6 class="card-title mt-2">Almost There!</h6>
+                            <p class="card-text small">
+                                Complete the required sections shown above to generate your check-in PDF.
+                            </p>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     }

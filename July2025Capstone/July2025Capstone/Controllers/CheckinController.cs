@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using July2025Capstone.Data;
 using July2025Capstone.Models;
+using July2025Capstone.Services;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using July2025Capstone.Shared.Models;
@@ -18,12 +19,14 @@ namespace July2025Capstone.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<CheckinController> _logger;
+        private readonly IPdfGenerationService _pdfService;
 
-        public CheckinController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<CheckinController> logger)
+        public CheckinController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<CheckinController> logger, IPdfGenerationService pdfService)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _pdfService = pdfService;
         }
 
         private async Task<string?> GetCurrentUserIdAsync()
@@ -130,6 +133,8 @@ namespace July2025Capstone.Controllers
                     .Include(p => p.Lifestyle)
                     .Include(p => p.Medications)
                     .Include(p => p.Allergies)
+                    .Include(p => p.VisitIntakes)
+                    .Include(p => p.Consent)
                     .Include(p => p.PreferredPharmacy)
                         .ThenInclude(ph => ph.Address)
                     .Include(p => p.PatientConditions)
@@ -141,12 +146,53 @@ namespace July2025Capstone.Controllers
                     return NotFound("Patient form not found or access denied");
                 }
 
-                // TODO: Implement actual PDF generation here using a library like iText7 or QuestPDF
-                // For now, return a mock response with comprehensive patient data
-                var pdfData = GenerateMockPdfContent(patient);
-                var mockPdfContent = System.Text.Encoding.UTF8.GetBytes(pdfData);
+                // Validate that all required sections are completed before generating PDF
+                var validationErrors = new List<string>();
                 
-                return File(mockPdfContent, "application/pdf", $"CheckInForm_{patient.FirstName}_{patient.LastName}_{DateTime.Now:yyyyMMdd}.pdf");
+                if (string.IsNullOrEmpty(patient.FirstName) || string.IsNullOrEmpty(patient.LastName))
+                {
+                    validationErrors.Add("Personal information is incomplete");
+                }
+                
+                if (patient.Address == null)
+                {
+                    validationErrors.Add("Address information is missing");
+                }
+                
+                if (!patient.InsurancePolicies.Any())
+                {
+                    validationErrors.Add("Insurance information is missing");
+                }
+                
+                if (!patient.EmergencyContacts.Any())
+                {
+                    validationErrors.Add("Emergency contacts are missing");
+                }
+                
+                if (patient.Lifestyle == null)
+                {
+                    validationErrors.Add("Lifestyle information is missing");
+                }
+                
+                if (!patient.VisitIntakes.Any())
+                {
+                    validationErrors.Add("Reason for visit is missing");
+                }
+                
+                if (patient.Consent == null)
+                {
+                    validationErrors.Add("Consent is required");
+                }
+
+                if (validationErrors.Any())
+                {
+                    return BadRequest($"Cannot generate PDF. Please complete the following required sections: {string.Join(", ", validationErrors)}");
+                }
+
+                // Generate the actual PDF using QuestPDF
+                var pdfBytes = _pdfService.GenerateCheckInPdf(patient);
+                
+                return File(pdfBytes, "application/pdf", $"CheckInForm_{patient.FirstName}_{patient.LastName}_{DateTime.Now:yyyyMMdd}.pdf");
             }
             catch (Exception ex)
             {

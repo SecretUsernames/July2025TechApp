@@ -350,6 +350,70 @@ namespace July2025Capstone.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpDelete("vitals/glucose/{id}")]
+        public async Task<ActionResult> DeleteGlucoseReading(int id)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var reading = await _context.VitalGlucoses
+                    .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
+
+                if (reading == null)
+                {
+                    return NotFound();
+                }
+
+                _context.VitalGlucoses.Remove(reading);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully deleted glucose reading with ID: {id}");
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting glucose reading: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("vitals/weight/{id}")]
+        public async Task<ActionResult> DeleteWeightReading(int id)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var reading = await _context.VitalWeights
+                    .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
+
+                if (reading == null)
+                {
+                    return NotFound();
+                }
+
+                _context.VitalWeights.Remove(reading);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully deleted weight reading with ID: {id}");
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting weight reading: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 
     // Keep only the response wrapper classes here

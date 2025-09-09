@@ -66,9 +66,14 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title mb-0">Blood Pressure Trends</h5>
-                            <button class="btn btn-primary btn-sm" @onclick="() => ShowAddBloodPressureModal()">
-                                <i class="bi bi-plus-circle me-1"></i>Add Reading
-                            </button>
+                            <div class="btn-group">
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowAddBloodPressureModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Reading
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => ShowViewBloodPressureModal()">
+                                    <i class="bi bi-list-ul me-1"></i>View Readings
+                                </button>
+                            </div>
                         </div>
                         @if (bloodPressureData?.Any() == true)
                         {
@@ -114,9 +119,14 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title mb-0">Glucose Levels</h5>
-                            <button class="btn btn-primary btn-sm" @onclick="() => ShowAddGlucoseModal()">
-                                <i class="bi bi-plus-circle me-1"></i>Add Reading
-                            </button>
+                            <div class="btn-group">
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowAddGlucoseModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Reading
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => ShowViewGlucoseModal()">
+                                    <i class="bi bi-list-ul me-1"></i>View Readings
+                                </button>
+                            </div>
                         </div>
                         @if (glucoseData?.Any() == true)
                         {
@@ -154,9 +164,14 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title mb-0">Weight History</h5>
-                            <button class="btn btn-primary btn-sm" @onclick="() => ShowAddWeightModal()">
-                                <i class="bi bi-plus-circle me-1"></i>Add Reading
-                            </button>
+                            <div class="btn-group">
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowAddWeightModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Reading
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => ShowViewWeightModal()">
+                                    <i class="bi bi-list-ul me-1"></i>View Readings
+                                </button>
+                            </div>
                         </div>
                         @if (weightData?.Any() == true)
                         {
@@ -302,8 +317,168 @@
     </div>
 </div>
 
+@* View Blood Pressure Readings Modal *@
+<div class="modal @(isViewBloodPressureModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Blood Pressure Readings</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <div class="modal-body">
+                @if (bloodPressureData?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Systolic</th>
+                                    <th>Diastolic</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in bloodPressureData.OrderByDescending(x => x.DateMeasured))
+                                {
+                                    <tr>
+                                        <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.Systolic mmHg</td>
+                                        <td>@reading.Diastolic mmHg</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteBloodPressureReading(reading.Id)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No blood pressure readings found.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideModals">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* View Glucose Readings Modal *@
+<div class="modal @(isViewGlucoseModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Glucose Readings</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <div class="modal-body">
+                @if (glucoseData?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Glucose Level</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in glucoseData.OrderByDescending(x => x.DateMeasured))
+                                {
+                                    <tr>
+                                        <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.GlucoseValue mg/dL</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteGlucoseReading(reading.Id)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No glucose readings found.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideModals">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* View Weight Readings Modal *@
+<div class="modal @(isViewWeightModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Weight Readings</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <div class="modal-body">
+                @if (weightData?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight</th>
+                                    <th>Unit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in weightData.OrderByDescending(x => x.DateMeasured))
+                                {
+                                    <tr>
+                                        <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.WeightValue</td>
+                                        <td>@(reading.Unit == WeightUnit.Pounds ? "lbs" : "kg")</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteWeightReading(reading.Id)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No weight readings found.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideModals">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @* Modal Backdrop *@
-@if (isBloodPressureModalVisible || isGlucoseModalVisible || isWeightModalVisible)
+@if (isBloodPressureModalVisible || isGlucoseModalVisible || isWeightModalVisible || isViewBloodPressureModalVisible || isViewGlucoseModalVisible || isViewWeightModalVisible)
 {
     <div class="modal-backdrop show"></div>
 }
@@ -324,6 +499,9 @@
     private bool isBloodPressureModalVisible;
     private bool isGlucoseModalVisible;
     private bool isWeightModalVisible;
+    private bool isViewBloodPressureModalVisible;
+    private bool isViewGlucoseModalVisible;
+    private bool isViewWeightModalVisible;
 
     // Form models
     private VitalBloodPressure newBloodPressure = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
@@ -407,11 +585,32 @@
         StateHasChanged();
     }
 
+    private void ShowViewBloodPressureModal()
+    {
+        isViewBloodPressureModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowViewGlucoseModal()
+    {
+        isViewGlucoseModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowViewWeightModal()
+    {
+        isViewWeightModalVisible = true;
+        StateHasChanged();
+    }
+
     private void HideModals()
     {
         isBloodPressureModalVisible = false;
         isGlucoseModalVisible = false;
         isWeightModalVisible = false;
+        isViewBloodPressureModalVisible = false;
+        isViewGlucoseModalVisible = false;
+        isViewWeightModalVisible = false;
     }
 
     // Save methods
@@ -755,5 +954,84 @@
         StateHasChanged();
         
         Console.WriteLine("Chart re-render completed");
+    }
+
+    // Delete methods for readings
+    private async Task DeleteBloodPressureReading(int id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/analytics/vitals/blood-pressure/{id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local data and refresh
+                bloodPressureData?.RemoveAll(bp => bp.Id == id);
+                StateHasChanged();
+                await RefreshData(); // Refresh to ensure data is current
+            }
+            else
+            {
+                errorMessage = $"Failed to delete blood pressure reading: {response.StatusCode}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting blood pressure reading: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteGlucoseReading(int id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/analytics/vitals/glucose/{id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local data and refresh
+                glucoseData?.RemoveAll(g => g.Id == id);
+                StateHasChanged();
+                await RefreshData(); // Refresh to ensure data is current
+            }
+            else
+            {
+                errorMessage = $"Failed to delete glucose reading: {response.StatusCode}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting glucose reading: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteWeightReading(int id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/analytics/vitals/weight/{id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local data and refresh
+                weightData?.RemoveAll(w => w.Id == id);
+                StateHasChanged();
+                await RefreshData(); // Refresh to ensure data is current
+            }
+            else
+            {
+                errorMessage = $"Failed to delete weight reading: {response.StatusCode}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting weight reading: {ex.Message}";
+            StateHasChanged();
+        }
     }
 }

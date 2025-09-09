@@ -1,4 +1,4 @@
-﻿using July2025Capstone.Client.Pages;
+﻿using July2025Capstone.Shared.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace July2025Capstone.Models
@@ -15,7 +15,7 @@ namespace July2025Capstone.Models
         public int DayOfWeek { get; set; } // 0 = Sunday, 6 = Saturday
 
         [Required]
-        public TimeOfDay TimeOfDay { get; set; } // Enum
+        public TimeOfDay TimeOfDay { get; set; } // Enum from shared models
 
         public bool Taken { get; set; } = false;
 

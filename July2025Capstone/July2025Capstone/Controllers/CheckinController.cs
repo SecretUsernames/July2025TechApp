@@ -580,6 +580,20 @@ PREFERRED PHARMACY:
             }
         }
 
+        // Helper method to get times for frequency - using shared enum
+        private static List<TimeOfDay> GetTimesForFrequency(Shared.Models.MedicationFrequency frequency)
+        {
+            return frequency switch
+            {
+                Shared.Models.MedicationFrequency.OnceDaily => new List<TimeOfDay> { TimeOfDay.Morning },
+                Shared.Models.MedicationFrequency.TwiceDaily => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Evening },
+                Shared.Models.MedicationFrequency.ThreeDaily => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Afternoon, TimeOfDay.Evening },
+                Shared.Models.MedicationFrequency.FourDaily => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Afternoon, TimeOfDay.Evening, TimeOfDay.Bedtime },
+                Shared.Models.MedicationFrequency.AsNeeded => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Afternoon, TimeOfDay.Evening, TimeOfDay.Bedtime },
+                _ => new List<TimeOfDay>()
+            };
+        }
+
         [HttpPost("save-medication")]
         public async Task<ActionResult<SaveMedicationResponse>> SaveMedication([FromBody] SaveMedicationRequest request)
         {
@@ -600,6 +614,10 @@ PREFERRED PHARMACY:
                     return BadRequest("Patient record not found. Please complete personal information first.");
                 }
 
+                int medicationId;
+                bool frequencyChanged = false;
+                Shared.Models.MedicationFrequency? oldFrequency = null;
+
                 if (request.Medication.Id > 0)
                 {
                     // Update existing medication
@@ -611,11 +629,21 @@ PREFERRED PHARMACY:
                         return NotFound("Medication not found or access denied");
                     }
 
+                    // Check if frequency changed
+                    oldFrequency = (Shared.Models.MedicationFrequency)existingMedication.Frequency;
+                    frequencyChanged = oldFrequency != request.Medication.Frequency;
+
+                    _logger.LogInformation("Editing medication {Id}: Frequency changed: {FrequencyChanged} (Old: {OldFreq}, New: {NewFreq})", 
+                        existingMedication.Id, frequencyChanged, oldFrequency, request.Medication.Frequency);
+
+                    // Update medication properties
                     existingMedication.Name = request.Medication.Name;
                     existingMedication.DosageStrength = request.Medication.DosageStrength;
                     existingMedication.DosageUnit = (Models.DosageUnit)request.Medication.DosageUnit;
                     existingMedication.CustomDosageUnit = request.Medication.CustomDosageUnit;
                     existingMedication.Frequency = (Models.MedicationFrequency)request.Medication.Frequency;
+                    
+                    medicationId = existingMedication.Id;
                 }
                 else
                 {
@@ -633,30 +661,66 @@ PREFERRED PHARMACY:
                     _context.Medications.Add(newMedication);
                     await _context.SaveChangesAsync();
 
-                    //Initialize doses
-                    var doses = MedicationTracker.InitializeDoses(new List<MedicationDto>
-                    {
-                        new MedicationDto
-                        {
-                            Id = newMedication.Id,
-                            Frequency = (Shared.Models.MedicationFrequency)newMedication.Frequency
-                        }
-                    });
-
+                    medicationId = newMedication.Id;
+                    frequencyChanged = true; // New medication always needs doses
                     
+                    _logger.LogInformation("Created new medication {Id}: {Name}", medicationId, newMedication.Name);
+                }
 
-                    // Convert shared doses to EF model doses
-                    var efDoses = doses.Select(d => new Models.MedicationDose
+                // ONLY recreate doses if frequency changed or it's a new medication
+                if (frequencyChanged)
+                {
+                    _logger.LogInformation("Frequency changed for medication {Id}, recreating doses...", medicationId);
+                    
+                    var times = GetTimesForFrequency(request.Medication.Frequency);
+
+                    // Remove existing doses for this medication ONLY when frequency changes
+                    var existingDoses = await _context.MedicationDoses
+                        .Where(d => d.MedicationId == medicationId)
+                        .ToListAsync();
+
+                    if (existingDoses.Any())
                     {
-                        MedicationId = d.MedicationId,
-                        DayOfWeek = d.DayOfWeek,
-                        TimeOfDay = d.TimeOfDay,
-                        Taken = d.Taken,
-                        TakenAt = d.TakenAt
-                    }).ToList();
+                        _logger.LogInformation("Deleting {Count} existing doses for medication {Id}", 
+                            existingDoses.Count, medicationId);
+                        _context.MedicationDoses.RemoveRange(existingDoses);
+                    }
 
+                    // Add new doses based on current frequency
+                    var newDoses = new List<Models.MedicationDose>();
+                    
+                    for (int day = 0; day < 7; day++)
+                    {
+                        // Validate day range
+                        if (day < 0 || day > 6)
+                        {
+                            _logger.LogError("Invalid day value: {Day}. Skipping.", day);
+                            continue;
+                        }
 
-                    _context.MedicationDoses.AddRange(efDoses);
+                        foreach (var time in times)
+                        {
+                            newDoses.Add(new Models.MedicationDose
+                            {
+                                MedicationId = medicationId,
+                                DayOfWeek = day,
+                                TimeOfDay = time,
+                                Taken = false, // Reset doses when frequency changes
+                                TakenAt = null
+                            });
+                        }
+                    }
+
+                    if (newDoses.Any())
+                    {
+                        _logger.LogInformation("Creating {Count} new doses for medication {Id}", 
+                            newDoses.Count, medicationId);
+                        _context.MedicationDoses.AddRange(newDoses);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Frequency unchanged for medication {Id}, keeping existing doses", medicationId);
                 }
 
                 await _context.SaveChangesAsync();
@@ -664,8 +728,10 @@ PREFERRED PHARMACY:
                 return Ok(new SaveMedicationResponse
                 {
                     Success = true,
-                    Message = "Medication saved successfully!",
-                    MedicationId = request.Medication.Id
+                    Message = frequencyChanged ? 
+                        "Medication saved successfully! Dose schedule updated due to frequency change." : 
+                        "Medication saved successfully!",
+                    MedicationId = medicationId
                 });
             }
             catch (Exception ex)
@@ -2052,12 +2118,6 @@ PREFERRED PHARMACY:
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public int ProcedureId { get; set; }
-    }
-
-    public class DeleteProcedureResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
     }
     }
 }

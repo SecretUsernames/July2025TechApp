@@ -3,14 +3,6 @@ using July2025Capstone.Shared.Models;
 
 namespace July2025Capstone.Client.Pages
 {
-    public enum TimeOfDay
-    {
-        Morning,
-        Afternoon,
-        Evening,
-        Bedtime
-    }
-
     public class MedicationDose
     {
         public int MedicationId { get; set; }

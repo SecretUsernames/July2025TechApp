@@ -192,7 +192,8 @@
                                                 <th style="width: 100px;">Time</th>
                                                 @for (int day = 0; day < 7; day++)
                                                 {
-                                                    <th class="text-center">@MedicationTracker.GetDayShortName(day)</th>
+                                                    var currentDay = day; // Capture the loop variable
+                                                    <th class="text-center">@MedicationTracker.GetDayShortName(currentDay)</th>
                                                 }
                                             </tr>
                                         </thead>
@@ -203,14 +204,15 @@
                                                     <td class="text-muted small">@MedicationTracker.GetTimeDisplayName(time)</td>
                                                     @for (int day = 0; day < 7; day++)
                                                     {
-                                                        var dose = GetDoseStatus(medication.Id, day, time);
+                                                        var currentDay = day; // Capture the loop variable in a local variable
+                                                        var dose = GetDoseStatus(medication.Id, currentDay, time);
                                                         var isTaken = dose?.Taken ?? false;
 
                                                         <td class="text-center">
                                                             <button type="button"
                                                                     class="btn btn-sm @(isTaken ? "btn-success" : "btn-outline-secondary") rounded-circle"
                                                                     style="width: 35px; height: 35px;"
-                                                                    @onclick="() => ToggleDoseAsync(medication.Id, day, time)">
+                                                                    @onclick="() => ToggleDoseAsync(medication.Id, currentDay, time)">
                                                                 @if (isTaken)
                                                                 {
                                                                     <span class="bi bi-check"></span>

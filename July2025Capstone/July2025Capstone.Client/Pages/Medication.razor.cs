@@ -67,7 +67,8 @@ namespace July2025Capstone.Client.Pages
             }
 
             await LoadMedications();
-            LoadDosesAsync();
+            await InitializeMissingDoses(); // Initialize any missing doses
+            await LoadDosesAsync();
             UpdateStats();
         }
 
@@ -82,8 +83,7 @@ namespace July2025Capstone.Client.Pages
                 {
                     var medicationList = await response.Content.ReadFromJsonAsync<List<MedicationDto>>();
                     medications = medicationList ?? new List<MedicationDto>();
-                    LoadDosesAsync();
-                    UpdateStats();
+                    // Don't call LoadDosesAsync here - it's called from OnInitializedAsync
                     StateHasChanged();
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
@@ -143,7 +143,7 @@ namespace July2025Capstone.Client.Pages
                     {
                         successMessage = "Medication deleted successfully!";
                         await LoadMedications();
-                        LoadDosesAsync();
+                        await LoadDosesAsync(); // Ensure doses are reloaded
                         UpdateStats();
                     }
                     else
@@ -177,7 +177,7 @@ namespace July2025Capstone.Client.Pages
                         successMessage = "Medication saved successfully!";
                         showDialog = false;
                         await LoadMedications();
-                        LoadDosesAsync();
+                        await LoadDosesAsync(); // Ensure doses are reloaded
                         UpdateStats();
                     }
                     else
@@ -280,6 +280,33 @@ namespace July2025Capstone.Client.Pages
             }
         }
 
+        private async Task InitializeMissingDoses()
+        {
+            try
+            {
+                // First, clean up any invalid day values (not 0-6) - one time cleanup
+                var cleanupResponse = await Http.PostAsync("api/medicationdose/cleanup-invalid-days", null);
+                if (cleanupResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Cleaned up invalid day values successfully");
+                }
+
+                // Only initialize missing doses, don't reset everything every time
+                var response = await Http.PostAsync("api/medicationdose/initialize-missing", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Missing doses initialized successfully");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to initialize missing doses");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing doses: {ex.Message}");
+            }
+        }
 
         private void UpdateStats()
         {
@@ -308,6 +335,17 @@ namespace July2025Capstone.Client.Pages
         {
             try
             {
+                // Validate inputs before sending
+                if (dayOfWeek < 0 || dayOfWeek > 6)
+                {
+                    Console.WriteLine($"❌ ERROR: Invalid dayOfWeek value: {dayOfWeek}. Should be 0-6.");
+                    errorMessage = $"Invalid day value: {dayOfWeek}. Please refresh the page.";
+                    return;
+                }
+
+                var dayName = MedicationTracker.GetDayName(dayOfWeek);
+                Console.WriteLine($"🎯 Toggling dose: MedicationId={medicationId}, DayOfWeek={dayOfWeek} ({dayName}), TimeOfDay={timeOfDay}");
+
                 var request = new ToggleDoseRequest
                 {
                     MedicationId = medicationId,
@@ -315,26 +353,30 @@ namespace July2025Capstone.Client.Pages
                     TimeOfDay = timeOfDay
                 };
 
+                Console.WriteLine($"📤 Sending request: MedicationId={request.MedicationId}, DayOfWeek={request.DayOfWeek} ({dayName}), TimeOfDay={request.TimeOfDay}");
+
                 var response = await Http.PostAsJsonAsync("api/medicationdose/toggle", request);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Refresh doses after toggling
-                    await LoadDosesAsync(medicationId);
+                    Console.WriteLine($"✅ Toggle successful for {dayName} {timeOfDay}, refreshing doses...");
+                    // Refresh ALL doses to ensure proper synchronization
+                    await LoadDosesAsync();
                     UpdateStats();
                     StateHasChanged();
                 }
                 else
                 {
-                    Console.WriteLine("Failed to toggle dose.");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"❌ Failed to toggle dose: {errorContent}");
+                    errorMessage = "Failed to update medication tracking. Please try again.";
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine("Error calling API for medication dose.");
-                throw;
+                Console.WriteLine($"💥 Error calling API for medication dose: {ex.Message}");
+                errorMessage = "Error updating medication tracking. Please try again.";
             }
-           
         }
 
         /*

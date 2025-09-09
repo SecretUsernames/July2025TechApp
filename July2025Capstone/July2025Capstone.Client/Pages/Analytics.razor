@@ -64,7 +64,7 @@
                         </div>
                         @if (bloodPressureData?.Any() == true)
                         {
-                            <SfChart Title="Blood Pressure Over Time">
+                            <SfChart>
                                 <ChartPrimaryXAxis Title="Date" ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd/yyyy" />
                                 <ChartPrimaryYAxis Title="mmHg" Minimum="60" Maximum="180" />
                                 <ChartSeriesCollection>
@@ -82,11 +82,6 @@
                                     </ChartSeries>
                                 </ChartSeriesCollection>
                             </SfChart>
-                            <div class="text-muted small mt-2">
-                                <span class="me-3">Reference Lines:</span>
-                                <span class="me-2">Systolic: 120 mmHg</span>
-                                <span>Diastolic: 80 mmHg</span>
-                            </div>
                         }
                         else
                         {
@@ -99,7 +94,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="card shadow">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -122,10 +117,6 @@
                                     </ChartSeries>
                                 </ChartSeriesCollection>
                             </SfChart>
-                            <div class="text-muted small mt-2">
-                                <span class="me-3">Reference Line:</span>
-                                <span>Normal Fasting: 100 mg/dL</span>
-                            </div>
                         }
                         else
                         {
@@ -138,7 +129,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="card shadow">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -171,15 +162,6 @@
                         }
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-12">
-                <button class="btn btn-outline-primary" @onclick="RefreshData">
-                    <i class="bi bi-arrow-clockwise me-2"></i>
-                    Refresh Data
-                </button>
             </div>
         </div>
     }

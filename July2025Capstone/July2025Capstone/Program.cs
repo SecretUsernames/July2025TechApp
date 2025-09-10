@@ -21,6 +21,7 @@ static async Task SeedAdminUserAsync(IServiceProvider services)
     const string adminRole = "Admin";
     const string tempPassword = "AdminPass123!"; // change after first login
 
+    // ensure Admin role exists
     if (!await roleManager.RoleExistsAsync(adminRole))
     {
         var roleResult = await roleManager.CreateAsync(new IdentityRole(adminRole));
@@ -28,6 +29,7 @@ static async Task SeedAdminUserAsync(IServiceProvider services)
             throw new Exception("Failed to create Admin role: " + string.Join(", ", roleResult.Errors.Select(e => e.Description)));
     }
 
+    // find or create the admin user
     var user = await userManager.FindByEmailAsync(adminEmail);
     if (user == null)
     {
@@ -43,6 +45,7 @@ static async Task SeedAdminUserAsync(IServiceProvider services)
             throw new Exception("Failed to create admin user: " + string.Join(", ", create.Errors.Select(e => e.Description)));
     }
 
+    // add to Admin role
     if (!await userManager.IsInRoleAsync(user, adminRole))
     {
         var add = await userManager.AddToRoleAsync(user, adminRole);
@@ -50,6 +53,7 @@ static async Task SeedAdminUserAsync(IServiceProvider services)
             throw new Exception("Failed to add user to Admin role: " + string.Join(", ", add.Errors.Select(e => e.Description)));
     }
 
+    // ensure a Role claim exists
     var claims = await userManager.GetClaimsAsync(user);
     if (!claims.Any(c => c.Type == ClaimTypes.Role && c.Value == adminRole))
     {
@@ -67,20 +71,8 @@ builder.Services.AddSyncfusionBlazor();
 // API controllers
 builder.Services.AddControllers();
 
-// ---------- HttpClient (SSR) with BaseAddress ----------
-var inferredUrl =
-    builder.Configuration["AppBaseUrl"]                      // optional from appsettings*.json
-    ?? builder.Configuration.GetValue<string>("urls")        // Kestrel --urls
-    ?? "http://localhost:5094/";                             // fallback dev URL
-
-builder.Services.AddHttpClient("ServerAPI", client =>
-{
-    client.BaseAddress = new Uri(inferredUrl);
-});
-
-// Make HttpClient (ServerAPI) injectable as default
-builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ServerAPI"));
-// -------------------------------------------------------
+// HttpClient (SSR) - let ASP.NET set BaseAddress
+builder.Services.AddHttpClient();
 
 // CORS (single dev policy)
 const string DevCors = "DevCors";
@@ -125,7 +117,7 @@ builder.Services.AddScoped<
     IUserClaimsPrincipalFactory<ApplicationUser>,
     UserClaimsPrincipalFactory<ApplicationUser, IdentityRole>>();
 
-// OpenAI client (optional)
+// OpenAI client
 builder.Services.AddHttpClient("OpenAI", client =>
 {
     client.BaseAddress = new Uri("https://api.openai.com/v1/");
@@ -143,7 +135,7 @@ builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-// Update LastLoginUtc on sign-in (defensive null check)
+// update LastLoginUtc on sign-in
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Events.OnSignedIn = async ctx =>

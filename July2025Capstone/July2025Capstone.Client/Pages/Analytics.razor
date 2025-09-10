@@ -346,6 +346,9 @@
                                         <td>@reading.Systolic mmHg</td>
                                         <td>@reading.Diastolic mmHg</td>
                                         <td>
+                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditBloodPressureReading(reading)">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
                                             <button class="btn btn-danger btn-sm" @onclick="() => DeleteBloodPressureReading(reading.Id)">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
@@ -398,6 +401,9 @@
                                         <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
                                         <td>@reading.GlucoseValue mg/dL</td>
                                         <td>
+                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditGlucoseReading(reading)">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
                                             <button class="btn btn-danger btn-sm" @onclick="() => DeleteGlucoseReading(reading.Id)">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
@@ -452,6 +458,9 @@
                                         <td>@reading.WeightValue</td>
                                         <td>@(reading.Unit == WeightUnit.Pounds ? "lbs" : "kg")</td>
                                         <td>
+                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditWeightReading(reading)">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
                                             <button class="btn btn-danger btn-sm" @onclick="() => DeleteWeightReading(reading.Id)">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
@@ -477,8 +486,114 @@
     </div>
 </div>
 
+@* Edit Blood Pressure Modal *@
+<div class="modal @(isEditBloodPressureModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <EditForm Model="@editBloodPressure" OnValidSubmit="HandleEditBloodPressureSubmit">
+                <DataAnnotationsValidator />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Blood Pressure Reading</h5>
+                    <button type="button" class="btn-close" @onclick="HideModals"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Systolic Pressure (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="editBloodPressure.Systolic" />
+                        <ValidationMessage For="@(() => editBloodPressure.Systolic)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Diastolic Pressure (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="editBloodPressure.Diastolic" />
+                        <ValidationMessage For="@(() => editBloodPressure.Diastolic)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="editBloodPressure.DateMeasured" />
+                        <ValidationMessage For="@(() => editBloodPressure.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Edit Glucose Modal *@
+<div class="modal @(isEditGlucoseModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <EditForm Model="@editGlucose" OnValidSubmit="HandleEditGlucoseSubmit">
+                <DataAnnotationsValidator />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Glucose Reading</h5>
+                    <button type="button" class="btn-close" @onclick="HideModals"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Glucose Level (mg/dL)</label>
+                        <InputNumber class="form-control" @bind-Value="editGlucose.GlucoseValue" />
+                        <ValidationMessage For="@(() => editGlucose.GlucoseValue)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="editGlucose.DateMeasured" />
+                        <ValidationMessage For="@(() => editGlucose.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Edit Weight Modal *@
+<div class="modal @(isEditWeightModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <EditForm Model="@editWeight" OnValidSubmit="HandleEditWeightSubmit">
+                <DataAnnotationsValidator />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Weight Reading</h5>
+                    <button type="button" class="btn-close" @onclick="HideModals"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Weight</label>
+                        <InputNumber class="form-control" @bind-Value="editWeight.WeightValue" />
+                        <ValidationMessage For="@(() => editWeight.WeightValue)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit</label>
+                        <InputSelect class="form-select" @bind-Value="editWeight.Unit">
+                            <option value="@WeightUnit.Pounds">Pounds (lbs)</option>
+                            <option value="@WeightUnit.Kilograms">Kilograms (kg)</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => editWeight.Unit)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="editWeight.DateMeasured" />
+                        <ValidationMessage For="@(() => editWeight.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
 @* Modal Backdrop *@
-@if (isBloodPressureModalVisible || isGlucoseModalVisible || isWeightModalVisible || isViewBloodPressureModalVisible || isViewGlucoseModalVisible || isViewWeightModalVisible)
+@if (isBloodPressureModalVisible || isGlucoseModalVisible || isWeightModalVisible || isViewBloodPressureModalVisible || isViewGlucoseModalVisible || isViewWeightModalVisible || isEditBloodPressureModalVisible || isEditGlucoseModalVisible || isEditWeightModalVisible)
 {
     <div class="modal-backdrop show"></div>
 }
@@ -502,11 +617,19 @@
     private bool isViewBloodPressureModalVisible;
     private bool isViewGlucoseModalVisible;
     private bool isViewWeightModalVisible;
+    private bool isEditBloodPressureModalVisible;
+    private bool isEditGlucoseModalVisible;
+    private bool isEditWeightModalVisible;
 
     // Form models
     private VitalBloodPressure newBloodPressure = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
     private VitalGlucose newGlucose = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
     private VitalWeight newWeight = new() { DateMeasured = DateTime.Today, UserId = string.Empty, Unit = WeightUnit.Pounds };
+    
+    // Edit form models
+    private VitalBloodPressure editBloodPressure = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
+    private VitalGlucose editGlucose = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
+    private VitalWeight editWeight = new() { DateMeasured = DateTime.Today, UserId = string.Empty, Unit = WeightUnit.Pounds };
 
     // Form submission handlers
     private async Task HandleBloodPressureSubmit(EditContext context)
@@ -563,6 +686,61 @@
         }
     }
 
+    // Edit form submission handlers
+    private async Task HandleEditBloodPressureSubmit(EditContext context)
+    {
+        Console.WriteLine("Edit blood pressure form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await UpdateBloodPressure();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    private async Task HandleEditGlucoseSubmit(EditContext context)
+    {
+        Console.WriteLine("Edit glucose form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await UpdateGlucose();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    private async Task HandleEditWeightSubmit(EditContext context)
+    {
+        Console.WriteLine("Edit weight form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await UpdateWeight();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
     // Modal control methods
     private void ShowAddBloodPressureModal()
     {
@@ -603,6 +781,60 @@
         StateHasChanged();
     }
 
+    // Edit methods
+    private void EditBloodPressureReading(VitalBloodPressure reading)
+    {
+        // Copy the reading data to the edit model
+        editBloodPressure = new VitalBloodPressure
+        {
+            Id = reading.Id,
+            UserId = reading.UserId,
+            Systolic = reading.Systolic,
+            Diastolic = reading.Diastolic,
+            DateMeasured = reading.DateMeasured
+        };
+        
+        // Hide view modal and show edit modal
+        isViewBloodPressureModalVisible = false;
+        isEditBloodPressureModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void EditGlucoseReading(VitalGlucose reading)
+    {
+        // Copy the reading data to the edit model
+        editGlucose = new VitalGlucose
+        {
+            Id = reading.Id,
+            UserId = reading.UserId,
+            GlucoseValue = reading.GlucoseValue,
+            DateMeasured = reading.DateMeasured
+        };
+        
+        // Hide view modal and show edit modal
+        isViewGlucoseModalVisible = false;
+        isEditGlucoseModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void EditWeightReading(VitalWeight reading)
+    {
+        // Copy the reading data to the edit model
+        editWeight = new VitalWeight
+        {
+            Id = reading.Id,
+            UserId = reading.UserId,
+            WeightValue = reading.WeightValue,
+            Unit = reading.Unit,
+            DateMeasured = reading.DateMeasured
+        };
+        
+        // Hide view modal and show edit modal
+        isViewWeightModalVisible = false;
+        isEditWeightModalVisible = true;
+        StateHasChanged();
+    }
+
     private void HideModals()
     {
         isBloodPressureModalVisible = false;
@@ -611,6 +843,9 @@
         isViewBloodPressureModalVisible = false;
         isViewGlucoseModalVisible = false;
         isViewWeightModalVisible = false;
+        isEditBloodPressureModalVisible = false;
+        isEditGlucoseModalVisible = false;
+        isEditWeightModalVisible = false;
     }
 
     // Save methods
@@ -750,6 +985,118 @@
         {
             Console.WriteLine($"Exception saving weight: {ex}");
             errorMessage = $"Error saving weight: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    // Update methods for editing
+    private async Task UpdateBloodPressure()
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to update blood pressure: {editBloodPressure.Systolic}/{editBloodPressure.Diastolic}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Ensure the user ID is set
+            editBloodPressure.UserId = userId ?? string.Empty;
+            Console.WriteLine($"Sending update request with data: Systolic={editBloodPressure.Systolic}, Diastolic={editBloodPressure.Diastolic}, UserId={editBloodPressure.UserId}");
+            
+            var response = await Http.PutAsJsonAsync($"api/analytics/vitals/blood-pressure/{editBloodPressure.Id}", editBloodPressure);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                editBloodPressure = new() { DateMeasured = DateTime.Today }; // Reset the form
+                await RefreshData(); // Refresh data to update charts
+                isViewBloodPressureModalVisible = true; // Show the view modal again
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Error updating blood pressure: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating blood pressure: {ex}");
+            errorMessage = $"Error updating blood pressure: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateGlucose()
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to update glucose: {editGlucose.GlucoseValue}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Ensure the user ID is set
+            editGlucose.UserId = userId ?? string.Empty;
+            Console.WriteLine($"Sending update request with data: GlucoseValue={editGlucose.GlucoseValue}, UserId={editGlucose.UserId}");
+            
+            var response = await Http.PutAsJsonAsync($"api/analytics/vitals/glucose/{editGlucose.Id}", editGlucose);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                editGlucose = new() { DateMeasured = DateTime.Today }; // Reset the form
+                await RefreshData(); // Refresh data to update charts
+                isViewGlucoseModalVisible = true; // Show the view modal again
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Error updating glucose: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating glucose: {ex}");
+            errorMessage = $"Error updating glucose: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateWeight()
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to update weight: {editWeight.WeightValue}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Ensure the user ID is set
+            editWeight.UserId = userId ?? string.Empty;
+            Console.WriteLine($"Sending update request with data: WeightValue={editWeight.WeightValue}, UserId={editWeight.UserId}");
+            
+            var response = await Http.PutAsJsonAsync($"api/analytics/vitals/weight/{editWeight.Id}", editWeight);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                editWeight = new() { DateMeasured = DateTime.Today }; // Reset the form
+                await RefreshData(); // Refresh data to update charts
+                isViewWeightModalVisible = true; // Show the view modal again
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Error updating weight: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating weight: {ex}");
+            errorMessage = $"Error updating weight: {ex.Message}";
             StateHasChanged();
         }
     }

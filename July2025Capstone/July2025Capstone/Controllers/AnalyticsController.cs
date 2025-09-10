@@ -414,6 +414,123 @@ namespace July2025Capstone.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        // PUT endpoints for updating readings
+        [HttpPut("vitals/blood-pressure/{id}")]
+        public async Task<ActionResult<VitalBloodPressure>> UpdateBloodPressureReading(int id, [FromBody] VitalBloodPressure reading)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation($"Updating blood pressure reading with ID: {id}");
+
+                // Find the existing reading
+                var existingReading = await _context.VitalBloodPressures
+                    .FirstOrDefaultAsync(bp => bp.Id == id && bp.UserId == userId);
+
+                if (existingReading == null)
+                {
+                    return NotFound();
+                }
+
+                // Update the properties
+                existingReading.Systolic = reading.Systolic;
+                existingReading.Diastolic = reading.Diastolic;
+                existingReading.DateMeasured = reading.DateMeasured;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully updated blood pressure reading with ID: {id}");
+                return Ok(existingReading);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating blood pressure reading: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("vitals/glucose/{id}")]
+        public async Task<ActionResult<VitalGlucose>> UpdateGlucoseReading(int id, [FromBody] VitalGlucose reading)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation($"Updating glucose reading with ID: {id}");
+
+                // Find the existing reading
+                var existingReading = await _context.VitalGlucoses
+                    .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
+
+                if (existingReading == null)
+                {
+                    return NotFound();
+                }
+
+                // Update the properties
+                existingReading.GlucoseValue = reading.GlucoseValue;
+                existingReading.DateMeasured = reading.DateMeasured;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully updated glucose reading with ID: {id}");
+                return Ok(existingReading);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating glucose reading: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("vitals/weight/{id}")]
+        public async Task<ActionResult<VitalWeight>> UpdateWeightReading(int id, [FromBody] VitalWeight reading)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation($"Updating weight reading with ID: {id}");
+
+                // Find the existing reading
+                var existingReading = await _context.VitalWeights
+                    .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
+
+                if (existingReading == null)
+                {
+                    return NotFound();
+                }
+
+                // Update the properties
+                existingReading.WeightValue = reading.WeightValue;
+                existingReading.Unit = reading.Unit;
+                existingReading.DateMeasured = reading.DateMeasured;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully updated weight reading with ID: {id}");
+                return Ok(existingReading);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating weight reading: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 
     // Keep only the response wrapper classes here

@@ -13,151 +13,189 @@
 <PageTitle>Emergency Contacts - Check-in Form</PageTitle>
 
 <div class="container py-4">
-    <!-- Progress Bar -->
-    <div class="mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted">Step 5 of 8</span>
-            <span class="text-muted">Emergency Contacts</span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 62.5%"></div>
-        </div>
-    </div>
-
-    <h3 class="mb-3">Emergency Contacts</h3>
-    <p class="text-muted">Please add at least one emergency contact who can be reached in case of a medical emergency.</p>
-
     @if (!isAuthenticated)
     {
-        <div class="alert alert-warning">
-            <h4>Authentication Required</h4>
-            <p>You need to be logged in to access this page.</p>
-            <a href="/Account/Login" class="btn btn-primary">Login</a>
+        <div class="med-card">
+            <div class="card-body">
+                <div class="warning-state">
+                    <i class="bi bi-exclamation-triangle text-warning fs-2 mb-3"></i>
+                    <h4>Authentication Required</h4>
+                    <p>You need to be logged in to access this page.</p>
+                    <a href="/Account/Login" class="btn-primary-modern">Login</a>
+                </div>
+            </div>
         </div>
         return;
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+    <!-- Modern Progress Bar -->
+    <div class="modern-progress-wrapper mb-4">
+        <div class="progress-step-info">
+            <span class="step-number">Step 5 of 8</span>
+            <span class="step-title">Emergency Contacts</span>
+        </div>
+        <div class="modern-step-progress">
+            <div class="step-progress-bar" style="width: 62.5%"></div>
+        </div>
+    </div>
+
+    <!-- Modern Hero Section -->
+    <div class="page-hero mb-4">
+        <div class="hero-icon">
+            <i class="bi bi-person-lines-fill"></i>
+        </div>
+        <h1 class="hero-title">Emergency Contacts</h1>
+        <p class="hero-subtitle">
+            Add people who can be reached in case of a medical emergency. Having at least one emergency contact is important for your safety.
+        </p>
+    </div>
+
+    <div class="med-card">
+        <div class="card-header modern-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <div class="header-text">
+                    <h5 class="header-title">Emergency Contacts</h5>
+                    <p class="header-subtitle">Manage your emergency contact information for medical situations</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body modern-content">
             <!-- Add Emergency Contact Button -->
-            <div class="mb-3">
-                <button type="button" class="btn btn-primary" @onclick="ShowAddDialog">
-                    <span class="bi bi-plus-circle me-2"></span>Add Emergency Contact
+            <div class="action-header mb-4">
+                <button type="button" class="btn-add-modern" @onclick="ShowAddDialog">
+                    <i class="bi bi-plus-circle me-2"></i>Add Emergency Contact
                 </button>
             </div>
 
-            <!-- Emergency Contacts Table -->
+            <!-- Emergency Contacts Grid -->
             @if (emergencyContacts.Any())
             {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Name</th>
-                                <th>Relationship</th>
-                                <th>Phone Number</th>
-                                <th width="120">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var contact in emergencyContacts)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="fw-medium">@contact.FirstName @contact.LastName</div>
-                                    </td>
-                                    <td>@contact.Relationship</td>
-                                    <td>@contact.Phone</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditContact(contact)" title="Edit">
-                                                <span class="bi bi-pencil"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteContact(contact)" title="Delete">
-                                                <span class="bi bi-trash"></span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="contact-grid">
+                    @foreach (var contact in emergencyContacts)
+                    {
+                        <div class="contact-card">
+                            <div class="contact-card-header">
+                                <div class="contact-info">
+                                    <i class="bi bi-person-check text-primary me-2"></i>
+                                    <span class="contact-name">@contact.FirstName @contact.LastName</span>
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" class="action-btn edit" @onclick="() => EditContact(contact)" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="action-btn delete" @onclick="() => DeleteContact(contact)" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="contact-card-body">
+                                <div class="contact-detail">
+                                    <span class="detail-label">Relationship:</span>
+                                    <span class="detail-value relationship">@contact.Relationship</span>
+                                </div>
+                                <div class="contact-detail">
+                                    <span class="detail-label">Phone Number:</span>
+                                    <span class="detail-value phone">@contact.Phone</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
             else
             {
-                <div class="text-center py-5">
-                    <div class="text-muted">
-                        <span class="bi bi-person-plus fs-1 d-block mb-3"></span>
-                        <h5>No emergency contacts added yet</h5>
-                        <p class="mb-0">Click "Add Emergency Contact" to get started. It's important to have at least one emergency contact.</p>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-person-plus"></i>
                     </div>
+                    <h5 class="empty-title">No Emergency Contacts Added</h5>
+                    <p class="empty-text">Click "Add Emergency Contact" above to add someone who can be reached in case of a medical emergency. This is important for your safety and care.</p>
                 </div>
             }
         </div>
     </div>
 
-    <!-- Navigation Buttons -->
-    <div class="mt-4 d-flex justify-content-between">
-        <button type="button" @onclick="GoBack" class="btn btn-outline-secondary">
-            <span class="bi bi-arrow-left me-2"></span>Back
+    <!-- Modern Action Buttons -->
+    <div class="action-buttons-container">
+        <button type="button" @onclick="GoBack" class="btn-secondary-modern">
+            <i class="bi bi-arrow-left me-2"></i>
+            <span>Back to Insurance</span>
         </button>
-        <button type="button" @onclick="Continue" class="btn btn-primary">
-            Continue to Visit Information<span class="bi bi-arrow-right ms-2"></span>
+        <button type="button" @onclick="Continue" class="btn-primary-modern">
+            <span>Continue to Visit Information</span>
+            <i class="bi bi-arrow-right ms-2"></i>
         </button>
     </div>
 
-    <!-- Add/Edit Emergency Contact Modal -->
+    <!-- Modern Add/Edit Emergency Contact Modal -->
     @if (showDialog)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
+        <div class="modern-modal-backdrop" @onclick="CloseDialog">
+            <div class="modern-modal" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <i class="bi bi-person-plus text-primary me-2"></i>
                         <h5 class="modal-title">@dialogTitle</h5>
-                        <button type="button" class="btn-close" @onclick="CloseDialog"></button>
                     </div>
-                    <EditForm Model="currentContact" OnValidSubmit="SaveContact">
-                        <DataAnnotationsValidator />
-                        <div class="modal-body">
-                            @if (validationErrors.Any())
-                            {
-                                <div class="alert alert-danger mb-3">
-                                    <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
-                                    <ul class="mb-0">
-                                        @foreach (var error in validationErrors)
-                                        {
-                                            <li>@error</li>
-                                        }
-                                    </ul>
-                                </div>
-                            }
-                            
-                            @if (errorMessage != null)
-                            {
-                                <div class="alert alert-danger mb-3" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
-                                </div>
-                            }
-                            
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">First Name *</label>
+                    <button type="button" class="modal-close" @onclick="CloseDialog">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <EditForm Model="currentContact" OnValidSubmit="SaveContact">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (validationErrors.Any())
+                        {
+                            <div class="status-alert error mb-3">
+                                <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
+                                <ul class="mb-0">
+                                    @foreach (var error in validationErrors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        
+                        @if (errorMessage != null)
+                        {
+                            <div class="status-alert error mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                            </div>
+                        }
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-person me-2"></i>First Name *
+                                    </label>
                                     <InputText @bind-Value="currentContact.FirstName" 
-                                               class="form-control" 
+                                               class="form-control modern-input" 
                                                placeholder="Emergency contact's first name" />
-                                    <ValidationMessage For="@(() => currentContact.FirstName)" class="text-danger small mt-1" />
+                                    <ValidationMessage For="@(() => currentContact.FirstName)" class="validation-message" />
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Last Name *</label>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-person me-2"></i>Last Name *
+                                    </label>
                                     <InputText @bind-Value="currentContact.LastName" 
-                                               class="form-control" 
+                                               class="form-control modern-input" 
                                                placeholder="Emergency contact's last name" />
-                                    <ValidationMessage For="@(() => currentContact.LastName)" class="text-danger small mt-1" />
+                                    <ValidationMessage For="@(() => currentContact.LastName)" class="validation-message" />
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Relationship *</label>
-                                    <InputSelect @bind-Value="currentContact.Relationship" class="form-select">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-heart me-2"></i>Relationship *
+                                    </label>
+                                    <InputSelect @bind-Value="currentContact.Relationship" class="form-select modern-select">
                                         <option value="">-- Select Relationship --</option>
                                         <option value="Spouse">Spouse</option>
                                         <option value="Parent">Parent</option>
@@ -169,46 +207,56 @@
                                         <option value="Other Family">Other Family</option>
                                         <option value="Other">Other</option>
                                     </InputSelect>
-                                    <ValidationMessage For="@(() => currentContact.Relationship)" class="text-danger small mt-1" />
+                                    <ValidationMessage For="@(() => currentContact.Relationship)" class="validation-message" />
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Phone Number *</label>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-telephone me-2"></i>Phone Number *
+                                    </label>
                                     <InputText @bind-Value="currentContact.Phone" 
-                                               class="form-control" 
-                                               placeholder="e.g., (555) 123-4567" />
-                                    <ValidationMessage For="@(() => currentContact.Phone)" class="text-danger small mt-1" />
-                                    <div class="form-text">Include area code</div>
+                                               class="form-control modern-input" 
+                                               placeholder="(555) 123-4567" />
+                                    <ValidationMessage For="@(() => currentContact.Phone)" class="validation-message" />
+                                    <div class="input-help">Include area code for best contact results</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseDialog">Cancel</button>
-                            <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                @if (isLoading)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Save Emergency Contact
-                            </button>
-                        </div>
-                    </EditForm>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary-modern" @onclick="CloseDialog">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn-primary-modern @(isLoading ? "loading" : "")" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span>Save Emergency Contact</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
             </div>
         </div>
     }
 
-    @* Success messages are shown outside the modal since they appear after successful operations when modal is closed *@
+    <!-- Status Messages -->
     @if (successMessage != null)
     {
-        <div class="alert alert-success mt-3" role="alert">
+        <div class="status-alert success mt-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@successMessage
         </div>
     }
     
-    @* Error messages outside modal are only for non-modal operations (like loading data) *@
     @if (errorMessage != null && !showDialog)
     {
-        <div class="alert alert-danger mt-3" role="alert">
+        <div class="status-alert error mt-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
         </div>
     }
@@ -468,3 +516,586 @@
         Navigation.NavigateTo("/checkin-form-creation/visit-intake");
     }
 }
+
+<style>
+    /* Modern Progress Bar */
+    .modern-progress-wrapper {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-step-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .step-number {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .step-title {
+        font-size: 0.875rem;
+        color: #374151;
+        font-weight: 600;
+    }
+    
+    .modern-step-progress {
+        background: #f1f5f9;
+        border-radius: 8px;
+        height: 8px;
+        overflow: hidden;
+    }
+    
+    .step-progress-bar {
+        background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
+        height: 100%;
+        border-radius: 8px;
+        transition: width 0.6s ease;
+    }
+    
+    /* Modern Hero Section */
+    .page-hero {
+        text-align: center;
+        padding: 32px 24px;
+        background: var(--brand-gradient);
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 24px;
+    }
+    
+    .hero-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.9;
+    }
+    
+    .hero-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: white;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.95;
+        margin: 0;
+        color: white;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Modern Cards */
+    .med-card {
+        background: rgba(255, 255, 255, 0.97);
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .med-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modern-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.1);
+        padding: 20px 24px;
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .header-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--brand-gradient);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .header-text {
+        flex: 1;
+    }
+    
+    .header-title {
+        color: #1f2937;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        font-size: 1.25rem;
+    }
+    
+    .header-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    /* Modern Content */
+    .modern-content {
+        padding: 28px;
+    }
+    
+    .action-header {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 24px;
+    }
+    
+    .btn-add-modern {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    
+    .btn-add-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Contact Grid */
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+    
+    .contact-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .contact-card:hover {
+        border-color: var(--brand-500);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .contact-card-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .contact-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .contact-name {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.1rem;
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .action-btn.edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--brand-600);
+    }
+    
+    .action-btn.edit:hover {
+        background: var(--brand-600);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .action-btn.delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    .action-btn.delete:hover {
+        background: #dc2626;
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .contact-card-body {
+        padding: 20px;
+    }
+    
+    .contact-detail {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .contact-detail:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .detail-value {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .relationship {
+        background: var(--brand-gradient);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+    }
+    
+    .phone {
+        font-family: 'Courier New', monospace;
+        background: rgba(16, 185, 129, 0.1);
+        color: #065f46;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #d1d5db;
+        margin-bottom: 20px;
+    }
+    
+    .empty-title {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    
+    .empty-text {
+        color: #6b7280;
+        font-size: 0.95rem;
+        max-width: 450px;
+        margin: 0 auto;
+    }
+    
+    /* Modern Modal - Similar to previous pages */
+    .modern-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+        padding: 20px;
+    }
+    
+    .modern-modal {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: hidden;
+        animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @@keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .modal-header {
+        padding: 24px 28px;
+        border-bottom: 2px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .modal-title-section {
+        display: flex;
+        align-items: center;
+    }
+    
+    .modal-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    
+    .modal-close {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .modal-close:hover {
+        background: #dc2626;
+        color: white;
+    }
+    
+    .modal-body {
+        padding: 28px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        padding: 20px 28px;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        background: #f9fafb;
+    }
+    
+    /* Form Styling */
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .modern-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+    }
+    
+    .modern-input,
+    .modern-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .modern-input:focus,
+    .modern-select:focus {
+        outline: none;
+        border-color: var(--brand-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .modern-input::placeholder {
+        color: #9ca3af;
+        font-size: 0.95rem;
+    }
+    
+    .validation-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 4px;
+        display: block;
+    }
+    
+    .input-help {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 4px;
+        font-style: italic;
+    }
+    
+    /* Action Buttons */
+    .action-buttons-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+        border: none;
+        border-radius: 12px;
+        padding: 16px 32px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    
+    .btn-primary-modern:hover:not(.loading) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-primary-modern.loading {
+        opacity: 0.8;
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary-modern {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid var(--brand-600);
+        border-radius: 12px;
+        padding: 16px 24px;
+        color: var(--brand-600);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        font-size: 1rem;
+        min-width: 160px;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-secondary-modern:hover {
+        background: var(--brand-600);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Status Alerts */
+    .status-alert {
+        border-radius: 12px;
+        padding: 16px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    
+    .status-alert.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #065f46;
+    }
+    
+    .status-alert.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #991b1b;
+    }
+    
+    .warning-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .action-buttons-container {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .btn-primary-modern,
+        .btn-secondary-modern {
+            width: 100%;
+            min-width: unset;
+        }
+        
+        .hero-title {
+            font-size: 1.875rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .modern-content {
+            padding: 20px;
+        }
+        
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-header,
+        .modal-footer {
+            padding: 20px;
+        }
+    }
+</style>

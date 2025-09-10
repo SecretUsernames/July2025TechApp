@@ -12,34 +12,47 @@
 
 <PageTitle>Personal Information - Check-in Form</PageTitle>
 
-@if (!isAuthenticated)
-{
-    <div class="alert alert-warning">
-        <h4>Authentication Required</h4>
-        <p>You need to be logged in to access this page.</p>
-        <a href="/Account/Login" class="btn btn-primary">Login</a>
-    </div>
-    return;
-}
-
 <div class="container py-4">
-    <!-- Progress Bar -->
-    <div class="mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted">Step 1 of 8</span>
-            <span class="text-muted">Personal Information</span>
+    @if (!isAuthenticated)
+    {
+        <div class="med-card">
+            <div class="card-body">
+                <div class="warning-state">
+                    <i class="bi bi-exclamation-triangle text-warning fs-2 mb-3"></i>
+                    <h4>Authentication Required</h4>
+                    <p>You need to be logged in to access this page.</p>
+                    <a href="/Account/Login" class="btn-primary-modern">Login</a>
+                </div>
+            </div>
         </div>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 17.5%"></div>
+        return;
+    }
+
+    <!-- Modern Progress Bar -->
+    <div class="modern-progress-wrapper mb-4">
+        <div class="progress-step-info">
+            <span class="step-number">Step 1 of 8</span>
+            <span class="step-title">Personal Information</span>
+        </div>
+        <div class="modern-step-progress">
+            <div class="step-progress-bar" style="width: 12.5%"></div>
         </div>
     </div>
 
-    <h3 class="mb-3">Personal Information</h3>
-    <p class="text-muted">Please provide your basic personal details and address.</p>
+    <!-- Modern Hero Section -->
+    <div class="page-hero mb-4">
+        <div class="hero-icon">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <h1 class="hero-title">Personal Information</h1>
+        <p class="hero-subtitle">
+            Please provide your basic personal details and address information for your medical records.
+        </p>
+    </div>
 
     @if (validationErrors.Any())
     {
-        <div class="alert alert-danger mb-4">
+        <div class="status-alert error mb-4" role="alert">
             <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
             <ul class="mb-0">
                 @foreach (var error in validationErrors)
@@ -54,119 +67,212 @@
         <DataAnnotationsValidator />
         
         <!-- Personal Information Section -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Personal Details</h5>
+        <div class="med-card mb-4">
+            <div class="card-header modern-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="header-text">
+                        <h5 class="header-title">Personal Details</h5>
+                        <p class="header-subtitle">Basic information for identification and contact</p>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
+            <div class="card-body modern-form">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <label class="form-label">First Name *</label>
-                        <InputText @bind-Value="formModel.PersonalInfo.FirstName" class="form-control" />
-                        <ValidationMessage For="@(() => formModel.PersonalInfo.FirstName)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-person me-2"></i>First Name *
+                            </label>
+                            <InputText @bind-Value="formModel.PersonalInfo.FirstName" 
+                                      class="form-control modern-input" 
+                                      placeholder="Enter your first name" />
+                            <ValidationMessage For="@(() => formModel.PersonalInfo.FirstName)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Last Name *</label>
-                        <InputText @bind-Value="formModel.PersonalInfo.LastName" class="form-control" />
-                        <ValidationMessage For="@(() => formModel.PersonalInfo.LastName)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-person me-2"></i>Last Name *
+                            </label>
+                            <InputText @bind-Value="formModel.PersonalInfo.LastName" 
+                                      class="form-control modern-input" 
+                                      placeholder="Enter your last name" />
+                            <ValidationMessage For="@(() => formModel.PersonalInfo.LastName)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Date of Birth *</label>
-                        <InputDate @bind-Value="formModel.PersonalInfo.DateOfBirth" class="form-control" />
-                        <ValidationMessage For="@(() => formModel.PersonalInfo.DateOfBirth)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-calendar3 me-2"></i>Date of Birth *
+                            </label>
+                            <InputDate @bind-Value="formModel.PersonalInfo.DateOfBirth" 
+                                      class="form-control modern-input" />
+                            <ValidationMessage For="@(() => formModel.PersonalInfo.DateOfBirth)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Gender</label>
-                        <InputSelect @bind-Value="formModel.PersonalInfo.Gender" class="form-select">
-                            <option value="">Select gender</option>
-                            <option value="@GenderType.Male">Male</option>
-                            <option value="@GenderType.Female">Female</option>
-                            <option value="@GenderType.Other">Other</option>
-                        </InputSelect>
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-gender-ambiguous me-2"></i>Gender
+                            </label>
+                            <InputSelect @bind-Value="formModel.PersonalInfo.Gender" class="form-select modern-select">
+                                <option value="">Select gender</option>
+                                <option value="@GenderType.Male">Male</option>
+                                <option value="@GenderType.Female">Female</option>
+                                <option value="@GenderType.Other">Other</option>
+                            </InputSelect>
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Email *</label>
-                        <InputText @bind-Value="formModel.PersonalInfo.Email" type="email" class="form-control" />
-                        <ValidationMessage For="@(() => formModel.PersonalInfo.Email)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-envelope me-2"></i>Email Address *
+                            </label>
+                            <InputText @bind-Value="formModel.PersonalInfo.Email" 
+                                      type="email" 
+                                      class="form-control modern-input" 
+                                      placeholder="your.email@example.com" />
+                            <ValidationMessage For="@(() => formModel.PersonalInfo.Email)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Phone Number *</label>
-                        <InputText @bind-Value="formModel.PersonalInfo.Phone" type="tel" class="form-control" />
-                        <ValidationMessage For="@(() => formModel.PersonalInfo.Phone)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-telephone me-2"></i>Phone Number *
+                            </label>
+                            <InputText @bind-Value="formModel.PersonalInfo.Phone" 
+                                      type="tel" 
+                                      class="form-control modern-input" 
+                                      placeholder="(555) 123-4567" />
+                            <ValidationMessage For="@(() => formModel.PersonalInfo.Phone)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Preferred Contact Method</label>
-                        <InputSelect @bind-Value="formModel.PersonalInfo.PreferredContactMethod" class="form-select">
-                            <option value="">Select preferred contact method</option>
-                            <option value="@ContactMethod.Phone">Phone</option>
-                            <option value="@ContactMethod.Email">Email</option>
-                            <option value="@ContactMethod.Text">Text Message</option>
-                        </InputSelect>
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-chat-dots me-2"></i>Preferred Contact Method
+                            </label>
+                            <InputSelect @bind-Value="formModel.PersonalInfo.PreferredContactMethod" class="form-select modern-select">
+                                <option value="">Select contact preference</option>
+                                <option value="@ContactMethod.Phone">Phone Call</option>
+                                <option value="@ContactMethod.Email">Email</option>
+                                <option value="@ContactMethod.Text">Text Message</option>
+                            </InputSelect>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Address Section -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Address Information</h5>
+        <div class="med-card mb-4">
+            <div class="card-header modern-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <div class="header-text">
+                        <h5 class="header-title">Address Information</h5>
+                        <p class="header-subtitle">Your current residential address for correspondence</p>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
+            <div class="card-body modern-form">
+                <div class="row g-4">
                     <div class="col-12">
-                        <label class="form-label">Street Address *</label>
-                        <InputText @bind-Value="formModel.Address.Street" class="form-control" placeholder="123 Main Street" />
-                        <ValidationMessage For="@(() => formModel.Address.Street)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-house me-2"></i>Street Address *
+                            </label>
+                            <InputText @bind-Value="formModel.Address.Street" 
+                                      class="form-control modern-input" 
+                                      placeholder="123 Main Street, Apt 4B" />
+                            <ValidationMessage For="@(() => formModel.Address.Street)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">City *</label>
-                        <InputText @bind-Value="formModel.Address.City" class="form-control" placeholder="City" />
-                        <ValidationMessage For="@(() => formModel.Address.City)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-building me-2"></i>City *
+                            </label>
+                            <InputText @bind-Value="formModel.Address.City" 
+                                      class="form-control modern-input" 
+                                      placeholder="Enter city name" />
+                            <ValidationMessage For="@(() => formModel.Address.City)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">State *</label>
-                        <InputText @bind-Value="formModel.Address.State" class="form-control" placeholder="State" />
-                        <ValidationMessage For="@(() => formModel.Address.State)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-map me-2"></i>State *
+                            </label>
+                            <InputText @bind-Value="formModel.Address.State" 
+                                      class="form-control modern-input" 
+                                      placeholder="State" />
+                            <ValidationMessage For="@(() => formModel.Address.State)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Postal Code *</label>
-                        <InputText @bind-Value="formModel.Address.PostalCode" class="form-control" placeholder="12345" />
-                        <ValidationMessage For="@(() => formModel.Address.PostalCode)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-mailbox me-2"></i>Postal Code *
+                            </label>
+                            <InputText @bind-Value="formModel.Address.PostalCode" 
+                                      class="form-control modern-input" 
+                                      placeholder="12345" />
+                            <ValidationMessage For="@(() => formModel.Address.PostalCode)" class="validation-message" />
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Country *</label>
-                        <InputText @bind-Value="formModel.Address.Country" class="form-control" />
-                        <ValidationMessage For="@(() => formModel.Address.Country)" class="text-danger small mt-1" />
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-globe me-2"></i>Country *
+                            </label>
+                            <InputText @bind-Value="formModel.Address.Country" 
+                                      class="form-control modern-input" 
+                                      placeholder="United States" />
+                            <ValidationMessage For="@(() => formModel.Address.Country)" class="validation-message" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-4 d-flex justify-content-between">
-            <button type="button" @onclick="GoBack" class="btn btn-outline-secondary">
-                <span class="bi bi-arrow-left me-2"></span>Back
+        <!-- Modern Action Buttons -->
+        <div class="action-buttons-container">
+            <button type="button" @onclick="GoBack" class="btn-secondary-modern">
+                <i class="bi bi-arrow-left me-2"></i>
+                <span>Back to Overview</span>
             </button>
-            <button type="submit" class="btn btn-primary" disabled="@isLoading">
+            <button type="submit" class="btn-primary-modern @(isLoading ? "loading" : "")" disabled="@isLoading">
                 @if (isLoading)
                 {
-                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    <span>Saving...</span>
                 }
-                Continue to Medications<span class="bi bi-arrow-right ms-2"></span>
+                else
+                {
+                    <span>Continue to Medications</span>
+                    <i class="bi bi-arrow-right ms-2"></i>
+                }
             </button>
         </div>
     </EditForm>
 
+    <!-- Status Messages -->
     @if (errorMessage != null)
     {
-        <div class="alert alert-danger mt-3" role="alert">
+        <div class="status-alert error mt-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
         </div>
     }
 
     @if (successMessage != null)
     {
-        <div class="alert alert-success mt-3" role="alert">
+        <div class="status-alert success mt-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@successMessage
         </div>
     }
@@ -385,69 +491,306 @@
 }
 
 <style>
-    .form-label {
+    /* Modern Progress Bar */
+    .modern-progress-wrapper {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-step-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .step-number {
+        font-size: 0.875rem;
+        color: #6b7280;
         font-weight: 500;
-        color: #495057;
     }
     
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    .step-title {
+        font-size: 0.875rem;
+        color: #374151;
+        font-weight: 600;
     }
     
-    .alert {
-        border: none;
-        border-radius: 0.5rem;
+    .modern-step-progress {
+        background: #f1f5f9;
+        border-radius: 8px;
+        height: 8px;
+        overflow: hidden;
     }
     
-    .alert-danger {
-        background-color: #f8d7da;
-        color: #721c24;
+    .step-progress-bar {
+        background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
+        height: 100%;
+        border-radius: 8px;
+        transition: width 0.6s ease;
     }
     
-    .alert-success {
-        background-color: #d1e7dd;
-        color: #0f5132;
+    /* Modern Hero Section */
+    .page-hero {
+        text-align: center;
+        padding: 32px 24px;
+        background: var(--brand-gradient);
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 24px;
     }
     
-    .alert-warning {
-        background-color: #fff3cd;
-        color: #664d03;
+    .hero-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.9;
     }
     
-    .text-danger.small {
+    .hero-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: white;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.95;
+        margin: 0;
+        color: white;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Modern Cards */
+    .med-card {
+        background: rgba(255, 255, 255, 0.97);
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .med-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modern-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.1);
+        padding: 20px 24px;
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .header-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--brand-gradient);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .header-text {
+        flex: 1;
+    }
+    
+    .header-title {
+        color: #1f2937;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        font-size: 1.25rem;
+    }
+    
+    .header-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    /* Modern Forms */
+    .modern-form {
+        padding: 28px;
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .modern-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
         font-size: 0.875rem;
     }
     
-    .card {
+    .modern-input,
+    .modern-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .modern-input:focus,
+    .modern-select:focus {
+        outline: none;
+        border-color: var(--brand-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .modern-input::placeholder {
+        color: #9ca3af;
+        font-size: 0.95rem;
+    }
+    
+    .validation-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 4px;
+        display: block;
+    }
+    
+    /* Action Buttons */
+    .action-buttons-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
         border: none;
-        border-radius: 0.5rem;
+        border-radius: 12px;
+        padding: 16px 32px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
     }
     
-    .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        border-radius: 0.5rem 0.5rem 0 0 !important;
+    .btn-primary-modern:hover:not(.loading) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
     }
     
-    .btn {
-        border-radius: 0.375rem;
+    .btn-primary-modern.loading {
+        opacity: 0.8;
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary-modern {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid var(--brand-600);
+        border-radius: 12px;
+        padding: 16px 24px;
+        color: var(--brand-600);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        font-size: 1rem;
+        min-width: 160px;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-secondary-modern:hover {
+        background: var(--brand-600);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Status Alerts */
+    .status-alert {
+        border-radius: 12px;
+        padding: 16px;
         font-weight: 500;
+        display: flex;
+        align-items: center;
     }
     
-    .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
+    .status-alert.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #065f46;
     }
     
-    .btn-primary:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
+    .status-alert.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #991b1b;
     }
     
-    .spinner-border-sm {
-        width: 1rem;
-        height: 1rem;
+    .warning-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .action-buttons-container {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .btn-primary-modern,
+        .btn-secondary-modern {
+            width: 100%;
+            min-width: unset;
+        }
+        
+        .hero-title {
+            font-size: 1.875rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .modern-form {
+            padding: 20px;
+        }
+        
+        .header-content {
+            gap: 12px;
+        }
+        
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.25rem;
+        }
     }
 </style>

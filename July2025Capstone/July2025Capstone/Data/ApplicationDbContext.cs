@@ -16,6 +16,7 @@ namespace July2025Capstone.Data
         public DbSet<Condition> Conditions { get; set; }
         public DbSet<PatientCondition> PatientConditions { get; set; }
         public DbSet<Medication> Medications { get; set; }
+        public DbSet<MedicationDose> MedicationDoses { get; set; }
         public DbSet<Allergy> Allergies { get; set; }
         public DbSet<Procedure> Procedures { get; set; }
         public DbSet<Consent> Consents { get; set; }
@@ -95,6 +96,12 @@ namespace July2025Capstone.Data
                 .HasOne(m => m.Patient)
                 .WithMany(p => p.Medications)
                 .HasForeignKey(m => m.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MedicationDose>()
+                .HasOne(d => d.Medication)
+                .WithMany(m => m.Doses)
+                .HasForeignKey(d => d.MedicationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Allergy relationships

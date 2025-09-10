@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using July2025Capstone.Data;
 using July2025Capstone.Models;
+using July2025Capstone.Services;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using July2025Capstone.Shared.Models;
+using July2025Capstone.Client.Pages;
 
 namespace July2025Capstone.Controllers
 {
@@ -17,12 +19,14 @@ namespace July2025Capstone.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<CheckinController> _logger;
+        private readonly IPdfGenerationService _pdfService;
 
-        public CheckinController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<CheckinController> logger)
+        public CheckinController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<CheckinController> logger, IPdfGenerationService pdfService)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _pdfService = pdfService;
         }
 
         private async Task<string?> GetCurrentUserIdAsync()
@@ -129,6 +133,8 @@ namespace July2025Capstone.Controllers
                     .Include(p => p.Lifestyle)
                     .Include(p => p.Medications)
                     .Include(p => p.Allergies)
+                    .Include(p => p.VisitIntakes)
+                    .Include(p => p.Consent)
                     .Include(p => p.PreferredPharmacy)
                         .ThenInclude(ph => ph.Address)
                     .Include(p => p.PatientConditions)
@@ -140,12 +146,53 @@ namespace July2025Capstone.Controllers
                     return NotFound("Patient form not found or access denied");
                 }
 
-                // TODO: Implement actual PDF generation here using a library like iText7 or QuestPDF
-                // For now, return a mock response with comprehensive patient data
-                var pdfData = GenerateMockPdfContent(patient);
-                var mockPdfContent = System.Text.Encoding.UTF8.GetBytes(pdfData);
+                // Validate that all required sections are completed before generating PDF
+                var validationErrors = new List<string>();
                 
-                return File(mockPdfContent, "application/pdf", $"CheckInForm_{patient.FirstName}_{patient.LastName}_{DateTime.Now:yyyyMMdd}.pdf");
+                if (string.IsNullOrEmpty(patient.FirstName) || string.IsNullOrEmpty(patient.LastName))
+                {
+                    validationErrors.Add("Personal information is incomplete");
+                }
+                
+                if (patient.Address == null)
+                {
+                    validationErrors.Add("Address information is missing");
+                }
+                
+                if (!patient.InsurancePolicies.Any())
+                {
+                    validationErrors.Add("Insurance information is missing");
+                }
+                
+                if (!patient.EmergencyContacts.Any())
+                {
+                    validationErrors.Add("Emergency contacts are missing");
+                }
+                
+                if (patient.Lifestyle == null)
+                {
+                    validationErrors.Add("Lifestyle information is missing");
+                }
+                
+                if (!patient.VisitIntakes.Any())
+                {
+                    validationErrors.Add("Reason for visit is missing");
+                }
+                
+                if (patient.Consent == null)
+                {
+                    validationErrors.Add("Consent is required");
+                }
+
+                if (validationErrors.Any())
+                {
+                    return BadRequest($"Cannot generate PDF. Please complete the following required sections: {string.Join(", ", validationErrors)}");
+                }
+
+                // Generate the actual PDF using QuestPDF
+                var pdfBytes = _pdfService.GenerateCheckInPdf(patient);
+                
+                return File(pdfBytes, "application/pdf", $"CheckInForm_{patient.FirstName}_{patient.LastName}_{DateTime.Now:yyyyMMdd}.pdf");
             }
             catch (Exception ex)
             {
@@ -579,6 +626,20 @@ PREFERRED PHARMACY:
             }
         }
 
+        // Helper method to get times for frequency - using shared enum
+        private static List<TimeOfDay> GetTimesForFrequency(Shared.Models.MedicationFrequency frequency)
+        {
+            return frequency switch
+            {
+                Shared.Models.MedicationFrequency.OnceDaily => new List<TimeOfDay> { TimeOfDay.Morning },
+                Shared.Models.MedicationFrequency.TwiceDaily => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Evening },
+                Shared.Models.MedicationFrequency.ThreeDaily => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Afternoon, TimeOfDay.Evening },
+                Shared.Models.MedicationFrequency.FourDaily => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Afternoon, TimeOfDay.Evening, TimeOfDay.Bedtime },
+                Shared.Models.MedicationFrequency.AsNeeded => new List<TimeOfDay> { TimeOfDay.Morning, TimeOfDay.Afternoon, TimeOfDay.Evening, TimeOfDay.Bedtime },
+                _ => new List<TimeOfDay>()
+            };
+        }
+
         [HttpPost("save-medication")]
         public async Task<ActionResult<SaveMedicationResponse>> SaveMedication([FromBody] SaveMedicationRequest request)
         {
@@ -599,6 +660,10 @@ PREFERRED PHARMACY:
                     return BadRequest("Patient record not found. Please complete personal information first.");
                 }
 
+                int medicationId;
+                bool frequencyChanged = false;
+                Shared.Models.MedicationFrequency? oldFrequency = null;
+
                 if (request.Medication.Id > 0)
                 {
                     // Update existing medication
@@ -610,16 +675,26 @@ PREFERRED PHARMACY:
                         return NotFound("Medication not found or access denied");
                     }
 
+                    // Check if frequency changed
+                    oldFrequency = (Shared.Models.MedicationFrequency)existingMedication.Frequency;
+                    frequencyChanged = oldFrequency != request.Medication.Frequency;
+
+                    _logger.LogInformation("Editing medication {Id}: Frequency changed: {FrequencyChanged} (Old: {OldFreq}, New: {NewFreq})", 
+                        existingMedication.Id, frequencyChanged, oldFrequency, request.Medication.Frequency);
+
+                    // Update medication properties
                     existingMedication.Name = request.Medication.Name;
                     existingMedication.DosageStrength = request.Medication.DosageStrength;
                     existingMedication.DosageUnit = (Models.DosageUnit)request.Medication.DosageUnit;
                     existingMedication.CustomDosageUnit = request.Medication.CustomDosageUnit;
                     existingMedication.Frequency = (Models.MedicationFrequency)request.Medication.Frequency;
+                    
+                    medicationId = existingMedication.Id;
                 }
                 else
                 {
                     // Create new medication
-                    var newMedication = new Medication
+                    var newMedication = new July2025Capstone.Models.Medication
                     {
                         PatientId = patient.Id,
                         Name = request.Medication.Name,
@@ -630,6 +705,68 @@ PREFERRED PHARMACY:
                     };
 
                     _context.Medications.Add(newMedication);
+                    await _context.SaveChangesAsync();
+
+                    medicationId = newMedication.Id;
+                    frequencyChanged = true; // New medication always needs doses
+                    
+                    _logger.LogInformation("Created new medication {Id}: {Name}", medicationId, newMedication.Name);
+                }
+
+                // ONLY recreate doses if frequency changed or it's a new medication
+                if (frequencyChanged)
+                {
+                    _logger.LogInformation("Frequency changed for medication {Id}, recreating doses...", medicationId);
+                    
+                    var times = GetTimesForFrequency(request.Medication.Frequency);
+
+                    // Remove existing doses for this medication ONLY when frequency changes
+                    var existingDoses = await _context.MedicationDoses
+                        .Where(d => d.MedicationId == medicationId)
+                        .ToListAsync();
+
+                    if (existingDoses.Any())
+                    {
+                        _logger.LogInformation("Deleting {Count} existing doses for medication {Id}", 
+                            existingDoses.Count, medicationId);
+                        _context.MedicationDoses.RemoveRange(existingDoses);
+                    }
+
+                    // Add new doses based on current frequency
+                    var newDoses = new List<Models.MedicationDose>();
+                    
+                    for (int day = 0; day < 7; day++)
+                    {
+                        // Validate day range
+                        if (day < 0 || day > 6)
+                        {
+                            _logger.LogError("Invalid day value: {Day}. Skipping.", day);
+                            continue;
+                        }
+
+                        foreach (var time in times)
+                        {
+                            newDoses.Add(new Models.MedicationDose
+                            {
+                                MedicationId = medicationId,
+                                DayOfWeek = day,
+                                TimeOfDay = time,
+                                Taken = false, // Reset doses when frequency changes
+                                TakenAt = null
+                            });
+                        }
+                    }
+
+                    if (newDoses.Any())
+                    {
+                        _logger.LogInformation("Creating {Count} new doses for medication {Id}", 
+                            newDoses.Count, medicationId);
+                        _context.MedicationDoses.AddRange(newDoses);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Frequency unchanged for medication {Id}, keeping existing doses", medicationId);
                 }
 
                 await _context.SaveChangesAsync();
@@ -637,8 +774,10 @@ PREFERRED PHARMACY:
                 return Ok(new SaveMedicationResponse
                 {
                     Success = true,
-                    Message = "Medication saved successfully!",
-                    MedicationId = request.Medication.Id
+                    Message = frequencyChanged ? 
+                        "Medication saved successfully! Dose schedule updated due to frequency change." : 
+                        "Medication saved successfully!",
+                    MedicationId = medicationId
                 });
             }
             catch (Exception ex)
@@ -2025,12 +2164,6 @@ PREFERRED PHARMACY:
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public int ProcedureId { get; set; }
-    }
-
-    public class DeleteProcedureResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
     }
     }
 }

@@ -1,4 +1,5 @@
 @implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
 @using Syncfusion.Blazor.Buttons
 @inject NavigationManager NavigationManager
  
@@ -15,47 +16,62 @@
  
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
- 
         <!-- Home -->
         <AuthorizeView>
             <Authorized>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-                </NavLink>
-            </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
             </Authorized>
         </AuthorizeView>
  
-        <!-- MedVault features (moved above Weather/Counter) -->
+        <!-- Check-in Form -->
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="checkin-form-creation">
-                        <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span> Check-in Form
+                        <span class="bi material-symbols-outlined" aria-hidden="true">inventory</span> Check-in Form
                     </NavLink>
                 </div>
             </Authorized>
         </AuthorizeView>
         
-       <AuthorizeView>
+        <!-- Medications -->
+        <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="medications">
-                        <span class="bi bi-pentagon-fill" aria-hidden="true"></span> Medications
+                        <span class="bi material-symbols-outlined" aria-hidden="true">pill</span> Medications
                     </NavLink>
                 </div>
             </Authorized>
         </AuthorizeView>
  
+        <!-- Analytics -->
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="analytics">
-                        <span class="bi bi-graph-up-arrow-nav-menu" aria-hidden="true"></span> Analytics
+                        <span class="bi material-symbols-outlined" aria-hidden="true">timeline</span> Analytics
                     </NavLink>
                 </div>
             </Authorized>
+        </AuthorizeView>
+
+        <!-- Admin Panel (Admins only) -->
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/admin" Match="NavLinkMatch.Prefix">
+                        <span class="bi bi-gear-wide-connected-nav-menu" aria-hidden="true"></span> Admin Panel
+                    </NavLink>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                @* Hidden for non-admins *@
+            </NotAuthorized>
         </AuthorizeView>
  
         <!-- Auth -->

@@ -4,6 +4,7 @@ using July2025Capstone.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace July2025Capstone.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250909005710_AddUserStatusAndLastLogin")]
+    partial class AddUserStatusAndLastLogin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -319,36 +322,6 @@ namespace July2025Capstone.Migrations
                     b.HasIndex("PatientId");
 
                     b.ToTable("Medications");
-                });
-
-            modelBuilder.Entity("July2025Capstone.Models.MedicationDose", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MedicationId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("Taken")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("TakenAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TimeOfDay")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MedicationId");
-
-                    b.ToTable("MedicationDoses");
                 });
 
             modelBuilder.Entity("July2025Capstone.Models.Patient", b =>
@@ -783,17 +756,6 @@ namespace July2025Capstone.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("July2025Capstone.Models.MedicationDose", b =>
-                {
-                    b.HasOne("July2025Capstone.Models.Medication", "Medication")
-                        .WithMany("Doses")
-                        .HasForeignKey("MedicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Medication");
-                });
-
             modelBuilder.Entity("July2025Capstone.Models.Patient", b =>
                 {
                     b.HasOne("July2025Capstone.Models.Address", "Address")
@@ -873,29 +835,35 @@ namespace July2025Capstone.Migrations
 
             modelBuilder.Entity("July2025Capstone.Models.VitalBloodPressure", b =>
                 {
-                    b.HasOne("July2025Capstone.Data.ApplicationUser", null)
+                    b.HasOne("July2025Capstone.Data.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("July2025Capstone.Models.VitalGlucose", b =>
                 {
-                    b.HasOne("July2025Capstone.Data.ApplicationUser", null)
+                    b.HasOne("July2025Capstone.Data.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("July2025Capstone.Models.VitalWeight", b =>
                 {
-                    b.HasOne("July2025Capstone.Data.ApplicationUser", null)
+                    b.HasOne("July2025Capstone.Data.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -959,11 +927,6 @@ namespace July2025Capstone.Migrations
             modelBuilder.Entity("July2025Capstone.Models.Condition", b =>
                 {
                     b.Navigation("PatientConditions");
-                });
-
-            modelBuilder.Entity("July2025Capstone.Models.Medication", b =>
-                {
-                    b.Navigation("Doses");
                 });
 
             modelBuilder.Entity("July2025Capstone.Models.Patient", b =>

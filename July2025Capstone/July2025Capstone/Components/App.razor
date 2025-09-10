@@ -14,13 +14,22 @@
     <!-- Syncfusion Blazor theme -->
     <link href="_content/Syncfusion.Blazor.Themes/bootstrap5.css" rel="stylesheet" />
     
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/png" href="images/logo.png" />
     <HeadOutlet />
 </head>
 
 <body>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
+    
+    <!-- Chart.js + your helper (load once globally) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+    <script src="js/medvault-charts.js" defer></script>
+    
+    <!-- PDF download functionality -->
+    <script src="js/site.js" defer></script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </body>
 
 </html>

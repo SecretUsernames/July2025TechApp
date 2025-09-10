@@ -1,0 +1,400 @@
+@page "/admin"
+@rendermode InteractiveWebAssembly
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.Net.Http.Json
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Cards
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Lists
+@using Syncfusion.Blazor.Charts
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<link href="css/admin.css" rel="stylesheet" />
+
+<div class="ad-wrap">
+  <header class="ad-hero">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p>Manage users, monitor system activity, and adjust app settings.</p>
+    </div>
+    <div class="hero-actions">
+      <SfButton CssClass="e-primary" @onclick="ReloadAll" Disabled="@(!isClient)">Refresh All</SfButton>
+    </div>
+  </header>
+
+  @if (!isClient || isLoading)
+  {
+    <div class="loading">Loading…</div>
+  }
+  else
+  {
+    <section class="ad-kpis">
+      <article class="card kpi">
+        <div class="kpi-title">Users Overview</div>
+        <div class="kpi-grid">
+          <div><div class="kpi-label">Total users</div><div class="kpi-value">@Overview?.totalUsers</div></div>
+          <div><div class="kpi-label">Active today</div><div class="kpi-value">@Overview?.activeToday</div></div>
+        </div>
+        <button class="btn-link" @onclick="@(() => ScrollTo("#users-panel"))">Manage Users</button>
+      </article>
+
+      <article class="card kpi">
+        <div class="kpi-title">System Health</div>
+        <div class="kpi-grid">
+          <div><div class="kpi-label">Uptime</div><div class="kpi-value">@Overview?.uptime</div></div>
+          <div><div class="kpi-label">API latency</div><div class="kpi-value">@Overview?.apiLatencyMs ms</div></div>
+        </div>
+        <button class="btn-link" @onclick="@(() => ScrollTo("#logs-panel"))">View Logs</button>
+      </article>
+
+      <article class="card kpi">
+        <div class="kpi-title">Chatbot Settings</div>
+        <div class="kpi-grid">
+          <div><div class="kpi-label">Model</div><div class="kpi-value">@Overview?.chatbotModel</div></div>
+          <div><div class="kpi-label">Daily limit</div><div class="kpi-value">@Overview?.dailyLimit</div></div>
+        </div>
+        <div class="kpi-sub muted">Today: @Overview?.todayRequests requests</div>
+      </article>
+    </section>
+
+    <section class="ad-main">
+      <article class="card panel" id="users-panel">
+        <header class="panel-h">
+          <div>
+            <h3>Users</h3>
+            <p class="muted">Recent and directory</p>
+          </div>
+        </header>
+        <div class="panel-b">
+          <div class="block-title">Recent Users</div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Last Login</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (RecentUsers.Count == 0)
+                {
+                  <tr><td colspan="4" class="muted">No recent users.</td></tr>
+                }
+                else
+                {
+                  @foreach (var u in RecentUsers)
+                  {
+                    <tr>
+                      <td>@u.Username</td>
+                      <td><span class="pill role">@u.Role</span></td>
+                      <td>@(u.LastLoginUtc.HasValue ? u.LastLoginUtc.Value.ToLocalTime().ToString("g") : "—")</td>
+                      <td><span class="pill @(u.Status=="Active" ? "ok" : "muted")">@u.Status</span></td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subtle-divider"></div>
+
+          <div class="block-title">Directory</div>
+          <SfGrid TItem="UserRow"
+                  DataSource="Users"
+                  AllowPaging="true"
+                  AllowSorting="true"
+                  AllowFiltering="true"
+                  Toolbar="@(new List<string>{ "Search" })"
+                  Height="360"
+                  Width="100%">
+            <GridPageSettings PageSize="8" />
+            <GridColumns>
+              <GridColumn Field=@nameof(UserRow.Username) HeaderText="Username" Width="170" />
+              <GridColumn Field=@nameof(UserRow.Email) HeaderText="Email" Width="230" />
+              <GridColumn Field=@nameof(UserRow.Role) HeaderText="Role" Width="120">
+                <Template Context="ctx">
+                  @{
+                    var u = (UserRow)ctx;
+                  }
+                  <span class="pill role">@u.Role</span>
+                </Template>
+              </GridColumn>
+              <GridColumn Field=@nameof(UserRow.Status) HeaderText="Status" Width="120">
+                <Template Context="ctx">
+                  @{
+                    var u = (UserRow)ctx;
+                  }
+                  <span class="pill @(u.Status=="Active" ? "ok" : "muted")">@u.Status</span>
+                </Template>
+              </GridColumn>
+              <GridColumn HeaderText="Actions" Width="220">
+                <Template Context="ctx">
+                  @{
+                    var u = (UserRow)ctx;
+                    var toggleLabel = u.Status == "Active" ? "Suspend" : "Activate";
+                    var nextStatus = u.Status == "Active" ? "Suspended" : "Active";
+                  }
+                  <div class="actions">
+                    <button class="btn-sm" @onclick="() => ToggleStatus(u, nextStatus)">@toggleLabel</button>
+                    <button class="btn-sm" @onclick="() => PromoteDemote(u)">@((u.Role=="Admin") ? "Make User" : "Make Admin")</button>
+                    <button class="btn-sm danger" @onclick="() => DeleteUser(u)">Delete</button>
+                  </div>
+                </Template>
+              </GridColumn>
+            </GridColumns>
+          </SfGrid>
+        </div>
+      </article>
+
+      <article class="card panel" id="logs-panel">
+        <header class="panel-h">
+          <div>
+            <h3>System Logs</h3>
+            <p class="muted">Security</p>
+          </div>
+        </header>
+        <div class="panel-b">
+          <div class="logs">
+            <SfListView TItem="LogRow" DataSource="Logs">
+              <Template Context="item">
+                @{
+                  var log = (LogRow)item;
+                  var level = (log.Level ?? "Info").ToLowerInvariant();
+                }
+                <div class="log">
+                  <div class="when">@log.WhenUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                  <span class="badge @(level=="warn" ? "warn" : level=="error" ? "error" : "info")">
+                    @(string.IsNullOrWhiteSpace(log.Level) ? "Info" : log.Level)
+                  </span>
+                  <div class="msg">@log.Message</div>
+                </div>
+              </Template>
+            </SfListView>
+            @if (Logs == null || !Logs.Any())
+            {
+              <div class="muted">No log entries.</div>
+            }
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="ad-charts">
+      <article class="card panel">
+        <header class="panel-h">
+          <div>
+            <h3>Usage Trends</h3>
+            <p class="muted">Last 7 days</p>
+          </div>
+        </header>
+        <div class="panel-b">
+          <SfChart Height="260px">
+            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"
+                               LabelFormat="MMM dd"
+                               IntervalType="Syncfusion.Blazor.Charts.IntervalType.Days" />
+            <ChartPrimaryYAxis Title="Requests" />
+            <ChartSeriesCollection>
+              <ChartSeries DataSource="@UsageSeries"
+                           XName="Date"
+                           YName="Count"
+                           Type="ChartSeriesType.Spline"
+                           Width="2" />
+            </ChartSeriesCollection>
+            <ChartTooltipSettings Enable="true" />
+          </SfChart>
+        </div>
+      </article>
+
+      <article class="card panel">
+        <header class="panel-h">
+          <div>
+            <h3>Error Rate</h3>
+            <p class="muted">By code</p>
+          </div>
+        </header>
+        <div class="panel-b">
+          <SfChart Height="260px">
+            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category" />
+            <ChartPrimaryYAxis Title="Count" />
+            <ChartSeriesCollection>
+              <ChartSeries DataSource="@ErrorSeries"
+                           XName="Type"
+                           YName="Count"
+                           Type="ChartSeriesType.Column"
+                           ColumnSpacing="0.2" />
+            </ChartSeriesCollection>
+            <ChartTooltipSettings Enable="true" />
+          </SfChart>
+        </div>
+      </article>
+    </section>
+  }
+</div>
+
+@code {
+  // ===== DTOs from API =====
+  public class OverviewDto
+  {
+    public int totalUsers { get; set; }
+    public int activeToday { get; set; }
+    public string uptime { get; set; } = "";
+    public int apiLatencyMs { get; set; }
+    public string chatbotModel { get; set; } = "";
+    public int dailyLimit { get; set; }
+    public int todayRequests { get; set; }
+  }
+  public class UserRow
+  {
+    public string Id { get; set; } = "";
+    public string Username { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Role { get; set; } = "";
+    public DateTime? LastLoginUtc { get; set; }
+    public string Status { get; set; } = "";
+  }
+  public class LogRow
+  {
+    public DateTime WhenUtc { get; set; }
+    public string Message { get; set; } = "";
+    public string Level { get; set; } = "Info";
+  }
+  public class MetricsDto
+  {
+    public List<DayPoint> usage { get; set; } = new();
+    public List<ErrorBucket> errors { get; set; } = new();
+  }
+  public class DayPoint { public DateTime day { get; set; } public int requests { get; set; } }
+  public class ErrorBucket { public string code { get; set; } = ""; public int count { get; set; } }
+
+  // Chart VMs
+  public record UsageView(DateTime Date, int Count);
+  public record ErrorView(string Type, int Count);
+
+  // State
+  OverviewDto? Overview;
+  List<UserRow> Users = new();
+  List<UserRow> RecentUsers = new();
+  List<LogRow> Logs = new();
+  MetricsDto? Metrics;
+
+  List<UsageView> UsageSeries = new();
+  List<ErrorView> ErrorSeries = new();
+
+  bool isClient;
+  bool isLoading;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      isClient = OperatingSystem.IsBrowser();
+      if (isClient)
+      {
+        isLoading = true; StateHasChanged();
+        await ReloadAll();
+        isLoading = false; StateHasChanged();
+      }
+    }
+  }
+
+  async Task ReloadAll()
+  {
+    Overview = await Http.GetFromJsonAsync<OverviewDto>("api/admin/overview");
+    Users    = await Http.GetFromJsonAsync<List<UserRow>>("api/admin/users")   ?? new();
+    Logs     = await Http.GetFromJsonAsync<List<LogRow>>("api/admin/logs")     ?? new();
+    Metrics  = await Http.GetFromJsonAsync<MetricsDto>("api/admin/metrics");
+
+    RecentUsers = Users
+      .Where(u => u.LastLoginUtc.HasValue)
+      .OrderByDescending(u => u.LastLoginUtc)
+      .Take(5).ToList();
+
+    UsageSeries = (Metrics?.usage ?? new())
+      .OrderBy(u => u.day)
+      .Select(u => new UsageView(u.day, u.requests))
+      .ToList();
+
+    ErrorSeries = (Metrics?.errors ?? new())
+      .Select(e => new ErrorView(e.code, e.count))
+      .ToList();
+  }
+
+  // ===== UI Actions =====
+  async Task DeleteUser(UserRow u)
+  {
+    if (!await Confirm($"Delete user '{u.Username}'? This cannot be undone.")) return;
+
+    var resp = await Http.DeleteAsync($"api/admin/users/{u.Id}");
+    if (resp.IsSuccessStatusCode)
+    {
+      Users.RemoveAll(x => x.Id == u.Id);
+      RecentUsers.RemoveAll(x => x.Id == u.Id);
+      StateHasChanged();
+    }
+    else
+    {
+      var msg = await resp.Content.ReadAsStringAsync();
+      await Alert(string.IsNullOrWhiteSpace(msg) ? "Failed to delete user." : msg);
+    }
+  }
+
+  async Task ToggleStatus(UserRow u, string nextStatus)
+  {
+    var ok = await PostJson($"api/admin/users/{u.Id}/status", new { status = nextStatus });
+    if (ok)
+    {
+      u.Status = nextStatus;
+      StateHasChanged();
+    }
+  }
+
+  async Task PromoteDemote(UserRow u)
+  {
+    var newRole = u.Role == "Admin" ? "User" : "Admin";
+    var ok = await PostJson($"api/admin/users/{u.Id}/role", new { role = newRole });
+    if (ok)
+    {
+      u.Role = newRole;
+      StateHasChanged();
+    }
+  }
+
+  async Task<bool> PostJson(string url, object body)
+  {
+    var resp = await Http.PostAsJsonAsync(url, body);
+    if (!resp.IsSuccessStatusCode)
+    {
+      var msg = await resp.Content.ReadAsStringAsync();
+      await Alert(string.IsNullOrWhiteSpace(msg) ? $"Request failed: {resp.StatusCode}" : msg);
+      return false;
+    }
+    return true;
+  }
+
+  // tiny helpers using built-in confirm/alert
+  async Task<bool> Confirm(string text)
+  {
+    try { return await JS.InvokeAsync<bool>("confirm", text); } catch { return false; }
+  }
+  async Task Alert(string text)
+  {
+    try { await JS.InvokeVoidAsync("alert", text); } catch { }
+  }
+
+  async Task ScrollTo(string selector)
+  {
+    try
+    {
+      await JS.InvokeVoidAsync("eval", $"document.querySelector('{selector}')?.scrollIntoView({{behavior:'smooth',block:'start'}})");
+    }
+    catch { }
+  }
+}

@@ -22,6 +22,8 @@ namespace July2025Capstone.Models
 
         // Navigation properties
         public virtual Patient Patient { get; set; } = null!;
+
+        public virtual ICollection<MedicationDose> Doses { get; set; } = new List<MedicationDose>();
     }
 
     public enum DosageUnit

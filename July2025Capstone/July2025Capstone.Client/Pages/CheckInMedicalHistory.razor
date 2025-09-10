@@ -13,265 +13,306 @@
 <PageTitle>Medical History - Check-in Form</PageTitle>
 
 <div class="container py-4">
-    <!-- Progress Bar -->
-    <div class="mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted">Step 3 of 8</span>
-            <span class="text-muted">Medical History</span>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 37.5%"></div>
-        </div>
-    </div>
-
-    <h3 class="mb-3">Medical History</h3>
-    <p class="text-muted">Please provide your medical history including allergies, medical conditions, and procedures. You can skip any section if not applicable.</p>
-
     @if (!isAuthenticated)
     {
-        <div class="alert alert-warning">
-            <h4>Authentication Required</h4>
-            <p>You need to be logged in to access this page.</p>
-            <a href="/Account/Login" class="btn btn-primary">Login</a>
+        <div class="med-card">
+            <div class="card-body">
+                <div class="warning-state">
+                    <i class="bi bi-exclamation-triangle text-warning fs-2 mb-3"></i>
+                    <h4>Authentication Required</h4>
+                    <p>You need to be logged in to access this page.</p>
+                    <a href="/Account/Login" class="btn-primary-modern">Login</a>
+                </div>
+            </div>
         </div>
         return;
     }
 
-    <!-- Allergies Section -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-shield-exclamation me-2"></i>Allergies & Reactions</h5>
+    <!-- Modern Progress Bar -->
+    <div class="modern-progress-wrapper mb-4">
+        <div class="progress-step-info">
+            <span class="step-number">Step 3 of 8</span>
+            <span class="step-title">Medical History</span>
         </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <button type="button" class="btn btn-primary btn-sm" @onclick="ShowAddAllergyDialog">
-                    <span class="bi bi-plus-circle me-2"></span>Add Allergy
+        <div class="modern-step-progress">
+            <div class="step-progress-bar" style="width: 37.5%"></div>
+        </div>
+    </div>
+
+    <!-- Modern Hero Section -->
+    <div class="page-hero mb-4">
+        <div class="hero-icon">
+            <i class="bi bi-heart-pulse"></i>
+        </div>
+        <h1 class="hero-title">Medical History</h1>
+        <p class="hero-subtitle">
+            Provide your medical history including allergies, conditions, and procedures. This section is optional but helps ensure comprehensive care.
+        </p>
+    </div>
+
+    <!-- Allergies Section -->
+    <div class="med-card mb-4">
+        <div class="card-header modern-header">
+            <div class="header-content">
+                <div class="header-icon allergy">
+                    <i class="bi bi-shield-exclamation"></i>
+                </div>
+                <div class="header-text">
+                    <h5 class="header-title">Allergies & Reactions</h5>
+                    <p class="header-subtitle">List any known allergies to medications, foods, or environmental factors</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body modern-content">
+            <div class="action-header mb-4">
+                <button type="button" class="btn-add-modern allergy" @onclick="ShowAddAllergyDialog">
+                    <i class="bi bi-plus-circle me-2"></i>Add Allergy
                 </button>
             </div>
 
             @if (allergies.Any())
             {
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Allergen Name</th>
-                                <th width="120">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var allergy in allergies)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="fw-medium">@allergy.Allergen</div>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditAllergy(allergy)" title="Edit">
-                                                <span class="bi bi-pencil"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteAllergy(allergy)" title="Delete">
-                                                <span class="bi bi-trash"></span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="medical-grid">
+                    @foreach (var allergy in allergies)
+                    {
+                        <div class="medical-card allergy">
+                            <div class="medical-card-header">
+                                <div class="medical-info">
+                                    <i class="bi bi-shield-exclamation text-danger me-2"></i>
+                                    <span class="medical-name">@allergy.Allergen</span>
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" class="action-btn edit" @onclick="() => EditAllergy(allergy)" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="action-btn delete" @onclick="() => DeleteAllergy(allergy)" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
             else
             {
-                <div class="text-center py-3 text-muted">
-                    <small>No allergies added yet. Click "Add Allergy" if you have any known allergies.</small>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-shield-exclamation"></i>
+                    </div>
+                    <h5 class="empty-title">No Allergies Listed</h5>
+                    <p class="empty-text">Click "Add Allergy" if you have any known allergies to medications, foods, or environmental factors.</p>
                 </div>
             }
         </div>
     </div>
 
     <!-- Medical Conditions Section -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-heart-pulse me-2"></i>Medical Conditions</h5>
+    <div class="med-card mb-4">
+        <div class="card-header modern-header">
+            <div class="header-content">
+                <div class="header-icon condition">
+                    <i class="bi bi-clipboard2-heart"></i>
+                </div>
+                <div class="header-text">
+                    <h5 class="header-title">Medical Conditions</h5>
+                    <p class="header-subtitle">List any diagnosed medical conditions or chronic illnesses</p>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <button type="button" class="btn btn-primary btn-sm" @onclick="ShowAddConditionDialog">
-                    <span class="bi bi-plus-circle me-2"></span>Add Condition
+        <div class="card-body modern-content">
+            <div class="action-header mb-4">
+                <button type="button" class="btn-add-modern condition" @onclick="ShowAddConditionDialog">
+                    <i class="bi bi-plus-circle me-2"></i>Add Condition
                 </button>
             </div>
 
             @if (conditions.Any())
             {
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Condition Name</th>
-                                <th width="120">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var condition in conditions)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="fw-medium">@condition.ConditionName</div>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditCondition(condition)" title="Edit">
-                                                <span class="bi bi-pencil"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteCondition(condition)" title="Delete">
-                                                <span class="bi bi-trash"></span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="medical-grid">
+                    @foreach (var condition in conditions)
+                    {
+                        <div class="medical-card condition">
+                            <div class="medical-card-header">
+                                <div class="medical-info">
+                                    <i class="bi bi-clipboard2-heart text-info me-2"></i>
+                                    <span class="medical-name">@condition.ConditionName</span>
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" class="action-btn edit" @onclick="() => EditCondition(condition)" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="action-btn delete" @onclick="() => DeleteCondition(condition)" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
             else
             {
-                <div class="text-center py-3 text-muted">
-                    <small>No medical conditions added yet. Click "Add Condition" if you have any diagnosed conditions.</small>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-clipboard2-heart"></i>
+                    </div>
+                    <h5 class="empty-title">No Medical Conditions Listed</h5>
+                    <p class="empty-text">Click "Add Condition" if you have any diagnosed medical conditions or chronic illnesses.</p>
                 </div>
             }
         </div>
     </div>
 
     <!-- Procedures Section -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Medical Procedures</h5>
+    <div class="med-card mb-4">
+        <div class="card-header modern-header">
+            <div class="header-content">
+                <div class="header-icon procedure">
+                    <i class="bi bi-clipboard2-pulse"></i>
+                </div>
+                <div class="header-text">
+                    <h5 class="header-title">Medical Procedures</h5>
+                    <p class="header-subtitle">List any surgeries or significant medical procedures you've had</p>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <button type="button" class="btn btn-primary btn-sm" @onclick="ShowAddProcedureDialog">
-                    <span class="bi bi-plus-circle me-2"></span>Add Procedure
+        <div class="card-body modern-content">
+            <div class="action-header mb-4">
+                <button type="button" class="btn-add-modern procedure" @onclick="ShowAddProcedureDialog">
+                    <i class="bi bi-plus-circle me-2"></i>Add Procedure
                 </button>
             </div>
 
             @if (procedures.Any())
             {
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Procedure Name</th>
-                                <th width="150">Date</th>
-                                <th>Notes</th>
-                                <th width="120">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var procedure in procedures.OrderByDescending(p => p.ProcedureDate))
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="fw-medium">@procedure.ProcedureName</div>
-                                    </td>
-                                    <td>@procedure.ProcedureDate.ToString("MM/dd/yyyy")</td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(procedure.Notes))
-                                        {
-                                            <small class="text-muted">@(procedure.Notes.Length > 50 ? procedure.Notes.Substring(0, 50) + "..." : procedure.Notes)</small>
-                                        }
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" @onclick="() => EditProcedure(procedure)" title="Edit">
-                                                <span class="bi bi-pencil"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" @onclick="() => DeleteProcedure(procedure)" title="Delete">
-                                                <span class="bi bi-trash"></span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="procedure-grid">
+                    @foreach (var procedure in procedures.OrderByDescending(p => p.ProcedureDate))
+                    {
+                        <div class="procedure-card">
+                            <div class="procedure-card-header">
+                                <div class="procedure-info">
+                                    <i class="bi bi-clipboard2-pulse text-success me-2"></i>
+                                    <span class="procedure-name">@procedure.ProcedureName</span>
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" class="action-btn edit" @onclick="() => EditProcedure(procedure)" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="action-btn delete" @onclick="() => DeleteProcedure(procedure)" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="procedure-card-body">
+                                <div class="procedure-detail">
+                                    <span class="detail-label">Date:</span>
+                                    <span class="detail-value date">@procedure.ProcedureDate.ToString("MMMM dd, yyyy")</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(procedure.Notes))
+                                {
+                                    <div class="procedure-detail">
+                                        <span class="detail-label">Notes:</span>
+                                        <span class="detail-value notes">@(procedure.Notes.Length > 60 ? procedure.Notes.Substring(0, 60) + "..." : procedure.Notes)</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
             }
             else
             {
-                <div class="text-center py-3 text-muted">
-                    <small>No procedures added yet. Click "Add Procedure" if you have had any medical procedures.</small>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-clipboard2-pulse"></i>
+                    </div>
+                    <h5 class="empty-title">No Procedures Listed</h5>
+                    <p class="empty-text">Click "Add Procedure" if you have had any surgeries or significant medical procedures.</p>
                 </div>
             }
         </div>
     </div>
 
-    <!-- Navigation Buttons -->
-    <div class="mt-4 d-flex justify-content-between">
-        <button type="button" @onclick="GoBack" class="btn btn-outline-secondary">
-            <span class="bi bi-arrow-left me-2"></span>Back
+    <!-- Modern Action Buttons -->
+    <div class="action-buttons-container">
+        <button type="button" @onclick="GoBack" class="btn-secondary-modern">
+            <i class="bi bi-arrow-left me-2"></i>
+            <span>Back to Medications</span>
         </button>
-        <button type="button" @onclick="Continue" class="btn btn-primary">
-            Continue to Insurance<span class="bi bi-arrow-right ms-2"></span>
+        <button type="button" @onclick="Continue" class="btn-primary-modern">
+            <span>Continue to Insurance</span>
+            <i class="bi bi-arrow-right ms-2"></i>
         </button>
     </div>
 
+    <!-- Modern Modals -->
     <!-- Add/Edit Allergy Modal -->
     @if (showAllergyDialog)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
+        <div class="modern-modal-backdrop" @onclick="CloseAllergyDialog">
+            <div class="modern-modal small" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <i class="bi bi-shield-exclamation text-danger me-2"></i>
                         <h5 class="modal-title">@allergyDialogTitle</h5>
-                        <button type="button" class="btn-close" @onclick="CloseAllergyDialog"></button>
                     </div>
-                    <EditForm Model="currentAllergy" OnValidSubmit="SaveAllergy">
-                        <DataAnnotationsValidator />
-                        <div class="modal-body">
-                            @if (validationErrors.Any())
-                            {
-                                <div class="alert alert-danger mb-3">
-                                    <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
-                                    <ul class="mb-0">
-                                        @foreach (var error in validationErrors)
-                                        {
-                                            <li>@error</li>
-                                        }
-                                    </ul>
-                                </div>
-                            }
-                            
-                            @if (errorMessage != null)
-                            {
-                                <div class="alert alert-danger mb-3" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
-                                </div>
-                            }
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Allergen Name *</label>
-                                <InputText @bind-Value="currentAllergy.Allergen" 
-                                           class="form-control" 
-                                           placeholder="e.g., Peanuts, Penicillin, Pollen, Shellfish" />
-                                <ValidationMessage For="@(() => currentAllergy.Allergen)" class="text-danger small mt-1" />
-                                <div class="form-text">Enter the name of the substance you're allergic to</div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseAllergyDialog">Cancel</button>
-                            <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                @if (isLoading)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Save Allergy
-                            </button>
-                        </div>
-                    </EditForm>
+                    <button type="button" class="modal-close" @onclick="CloseAllergyDialog">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
+                <EditForm Model="currentAllergy" OnValidSubmit="SaveAllergy">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (validationErrors.Any())
+                        {
+                            <div class="status-alert error mb-3">
+                                <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
+                                <ul class="mb-0">
+                                    @foreach (var error in validationErrors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        
+                        @if (errorMessage != null)
+                        {
+                            <div class="status-alert error mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                            </div>
+                        }
+                        
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-shield-exclamation me-2"></i>Allergen Name *
+                            </label>
+                            <InputText @bind-Value="currentAllergy.Allergen" 
+                                       class="form-control modern-input" 
+                                       placeholder="e.g., Peanuts, Penicillin, Pollen, Shellfish" />
+                            <ValidationMessage For="@(() => currentAllergy.Allergen)" class="validation-message" />
+                            <div class="input-help">Enter the name of the substance you're allergic to</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary-modern" @onclick="CloseAllergyDialog">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn-primary-modern @(isLoading ? "loading" : "")" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span>Save Allergy</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
             </div>
         </div>
     }
@@ -279,57 +320,69 @@
     <!-- Add/Edit Condition Modal -->
     @if (showConditionDialog)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
+        <div class="modern-modal-backdrop" @onclick="CloseConditionDialog">
+            <div class="modern-modal small" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <i class="bi bi-clipboard2-heart text-info me-2"></i>
                         <h5 class="modal-title">@conditionDialogTitle</h5>
-                        <button type="button" class="btn-close" @onclick="CloseConditionDialog"></button>
                     </div>
-                    <EditForm Model="currentCondition" OnValidSubmit="SaveCondition">
-                        <DataAnnotationsValidator />
-                        <div class="modal-body">
-                            @if (validationErrors.Any())
-                            {
-                                <div class="alert alert-danger mb-3">
-                                    <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
-                                    <ul class="mb-0">
-                                        @foreach (var error in validationErrors)
-                                        {
-                                            <li>@error</li>
-                                        }
-                                    </ul>
-                                </div>
-                            }
-                            
-                            @if (errorMessage != null)
-                            {
-                                <div class="alert alert-danger mb-3" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
-                                </div>
-                            }
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Condition Name *</label>
-                                <InputText @bind-Value="currentCondition.ConditionName" 
-                                           class="form-control" 
-                                           placeholder="e.g., Diabetes, Hypertension, Asthma" />
-                                <ValidationMessage For="@(() => currentCondition.ConditionName)" class="text-danger small mt-1" />
-                                <div class="form-text">Enter the name of your medical condition</div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseConditionDialog">Cancel</button>
-                            <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                @if (isLoading)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Save Condition
-                            </button>
-                        </div>
-                    </EditForm>
+                    <button type="button" class="modal-close" @onclick="CloseConditionDialog">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
+                <EditForm Model="currentCondition" OnValidSubmit="SaveCondition">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (validationErrors.Any())
+                        {
+                            <div class="status-alert error mb-3">
+                                <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
+                                <ul class="mb-0">
+                                    @foreach (var error in validationErrors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        
+                        @if (errorMessage != null)
+                        {
+                            <div class="status-alert error mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                            </div>
+                        }
+                        
+                        <div class="form-group">
+                            <label class="form-label modern-label">
+                                <i class="bi bi-clipboard2-heart me-2"></i>Condition Name *
+                            </label>
+                            <InputText @bind-Value="currentCondition.ConditionName" 
+                                       class="form-control modern-input" 
+                                       placeholder="e.g., Diabetes, Hypertension, Asthma" />
+                            <ValidationMessage For="@(() => currentCondition.ConditionName)" class="validation-message" />
+                            <div class="input-help">Enter the name of your diagnosed medical condition</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary-modern" @onclick="CloseConditionDialog">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn-primary-modern @(isLoading ? "loading" : "")" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span>Save Condition</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
             </div>
         </div>
     }
@@ -337,87 +390,108 @@
     <!-- Add/Edit Procedure Modal -->
     @if (showProcedureDialog)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
+        <div class="modern-modal-backdrop" @onclick="CloseProcedureDialog">
+            <div class="modern-modal" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <i class="bi bi-clipboard2-pulse text-success me-2"></i>
                         <h5 class="modal-title">@procedureDialogTitle</h5>
-                        <button type="button" class="btn-close" @onclick="CloseProcedureDialog"></button>
                     </div>
-                    <EditForm Model="currentProcedure" OnValidSubmit="SaveProcedure">
-                        <DataAnnotationsValidator />
-                        <div class="modal-body">
-                            @if (validationErrors.Any())
-                            {
-                                <div class="alert alert-danger mb-3">
-                                    <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
-                                    <ul class="mb-0">
-                                        @foreach (var error in validationErrors)
-                                        {
-                                            <li>@error</li>
-                                        }
-                                    </ul>
-                                </div>
-                            }
-                            
-                            @if (errorMessage != null)
-                            {
-                                <div class="alert alert-danger mb-3" role="alert">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
-                                </div>
-                            }
-                            
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Procedure Name *</label>
+                    <button type="button" class="modal-close" @onclick="CloseProcedureDialog">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <EditForm Model="currentProcedure" OnValidSubmit="SaveProcedure">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (validationErrors.Any())
+                        {
+                            <div class="status-alert error mb-3">
+                                <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
+                                <ul class="mb-0">
+                                    @foreach (var error in validationErrors)
+                                    {
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        
+                        @if (errorMessage != null)
+                        {
+                            <div class="status-alert error mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                            </div>
+                        }
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-clipboard2-pulse me-2"></i>Procedure Name *
+                                    </label>
                                     <InputText @bind-Value="currentProcedure.ProcedureName" 
-                                               class="form-control" 
+                                               class="form-control modern-input" 
                                                placeholder="e.g., Appendectomy, Colonoscopy" />
-                                    <ValidationMessage For="@(() => currentProcedure.ProcedureName)" class="text-danger small mt-1" />
+                                    <ValidationMessage For="@(() => currentProcedure.ProcedureName)" class="validation-message" />
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Procedure Date *</label>
-                                    <InputDate @bind-Value="procedureDate" class="form-control" />
-                                    <ValidationMessage For="@(() => currentProcedure.ProcedureDate)" class="text-danger small mt-1" />
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-calendar3 me-2"></i>Procedure Date *
+                                    </label>
+                                    <InputDate @bind-Value="procedureDate" class="form-control modern-input" />
+                                    <ValidationMessage For="@(() => currentProcedure.ProcedureDate)" class="validation-message" />
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label">Notes</label>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label modern-label">
+                                        <i class="bi bi-journal-text me-2"></i>Notes (Optional)
+                                    </label>
                                     <InputTextArea @bind-Value="currentProcedure.Notes" 
-                                                   class="form-control" 
+                                                   class="form-control modern-textarea" 
                                                    rows="3"
-                                                   placeholder="Any additional notes about the procedure (optional)" />
-                                    <ValidationMessage For="@(() => currentProcedure.Notes)" class="text-danger small mt-1" />
+                                                   placeholder="Any additional notes about the procedure" />
+                                    <ValidationMessage For="@(() => currentProcedure.Notes)" class="validation-message" />
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseProcedureDialog">Cancel</button>
-                            <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                @if (isLoading)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                }
-                                Save Procedure
-                            </button>
-                        </div>
-                    </EditForm>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary-modern" @onclick="CloseProcedureDialog">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn-primary-modern @(isLoading ? "loading" : "")" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span>Save Procedure</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
             </div>
         </div>
     }
 
-    @* Success messages are shown outside the modal since they appear after successful operations when modal is closed *@
+    <!-- Status Messages -->
     @if (successMessage != null)
     {
-        <div class="alert alert-success mt-3" role="alert">
+        <div class="status-alert success mt-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@successMessage
         </div>
     }
     
-    @* Error messages outside modal are only for non-modal operations (like loading data) *@
     @if (errorMessage != null && !showAllergyDialog && !showConditionDialog && !showProcedureDialog)
     {
-        <div class="alert alert-danger mt-3" role="alert">
+        <div class="status-alert error mt-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
         </div>
     }
@@ -932,3 +1006,669 @@
     }
     #endregion
 }
+
+<style>
+    /* Common Styles from Previous Pages */
+    .modern-progress-wrapper {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-step-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .step-number, .step-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .step-number { color: #6b7280; }
+    .step-title { color: #374151; font-weight: 600; }
+    
+    .modern-step-progress {
+        background: #f1f5f9;
+        border-radius: 8px;
+        height: 8px;
+        overflow: hidden;
+    }
+    
+    .step-progress-bar {
+        background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
+        height: 100%;
+        border-radius: 8px;
+        transition: width 0.6s ease;
+    }
+    
+    .page-hero {
+        text-align: center;
+        padding: 32px 24px;
+        background: var(--brand-gradient);
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 24px;
+    }
+    
+    .hero-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.9;
+    }
+    
+    .hero-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: white;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.95;
+        margin: 0 auto;
+        color: white;
+        max-width: 600px;
+    }
+    
+    .med-card {
+        background: rgba(255, 255, 255, 0.97);
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .med-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modern-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.1);
+        padding: 20px 24px;
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .header-icon.allergy {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+    
+    .header-icon.condition {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+    
+    .header-icon.procedure {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    
+    .header-text {
+        flex: 1;
+    }
+    
+    .header-title {
+        color: #1f2937;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        font-size: 1.25rem;
+    }
+    
+    .header-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .modern-content {
+        padding: 28px;
+    }
+    
+    .action-header {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 24px;
+    }
+    
+    .btn-add-modern {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    
+    .btn-add-modern.allergy {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+    
+    .btn-add-modern.condition {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    
+    .btn-add-modern.procedure {
+        background: linear-gradient(135deg, #10b981, #059669);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    
+    .btn-add-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Medical Grid */
+    .medical-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+    
+    .medical-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .medical-card.allergy:hover { border-color: #ef4444; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15); }
+    .medical-card.condition:hover { border-color: #3b82f6; box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15); }
+    
+    .medical-card:hover { transform: translateY(-2px); }
+    
+    .medical-card-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .medical-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .medical-name {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1rem;
+    }
+    
+    /* Procedure Grid */
+    .procedure-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+    
+    .procedure-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .procedure-card:hover {
+        border-color: #10b981;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .procedure-card-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .procedure-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .procedure-name {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.1rem;
+    }
+    
+    .procedure-card-body {
+        padding: 20px;
+    }
+    
+    .procedure-detail {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 8px 0;
+        border-bottom: 1px solid #f3f4f6;
+        gap: 12px;
+    }
+    
+    .procedure-detail:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    
+    .detail-value {
+        font-weight: 600;
+        color: #1f2937;
+        text-align: right;
+    }
+    
+    .detail-value.date {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+    }
+    
+    .detail-value.notes {
+        font-weight: 400;
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        text-align: left;
+        flex: 1;
+    }
+    
+    /* Action Buttons */
+    .card-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .action-btn.edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--brand-600);
+    }
+    
+    .action-btn.edit:hover {
+        background: var(--brand-600);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .action-btn.delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    .action-btn.delete:hover {
+        background: #dc2626;
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+    }
+    
+    .empty-icon {
+        font-size: 3.5rem;
+        color: #d1d5db;
+        margin-bottom: 16px;
+    }
+    
+    .empty-title {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+    }
+    
+    .empty-text {
+        color: #6b7280;
+        font-size: 0.9rem;
+        max-width: 350px;
+        margin: 0 auto;
+        line-height: 1.4;
+    }
+    
+    /* Modals */
+    .modern-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+        padding: 20px;
+    }
+    
+    .modern-modal {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: hidden;
+        animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    .modern-modal.small {
+        max-width: 450px;
+    }
+    
+    @@keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .modal-header {
+        padding: 24px 28px;
+        border-bottom: 2px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .modal-title-section {
+        display: flex;
+        align-items: center;
+    }
+    
+    .modal-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    
+    .modal-close {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .modal-close:hover {
+        background: #dc2626;
+        color: white;
+    }
+    
+    .modal-body {
+        padding: 28px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        padding: 20px 28px;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        background: #f9fafb;
+    }
+    
+    /* Form Styling */
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .modern-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+    }
+    
+    .modern-input,
+    .modern-select,
+    .modern-textarea {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .modern-input:focus,
+    .modern-select:focus,
+    .modern-textarea:focus {
+        outline: none;
+        border-color: var(--brand-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .modern-input::placeholder,
+    .modern-textarea::placeholder {
+        color: #9ca3af;
+        font-size: 0.95rem;
+    }
+    
+    .modern-textarea {
+        resize: vertical;
+        min-height: 80px;
+        line-height: 1.5;
+    }
+    
+    .validation-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 4px;
+        display: block;
+    }
+    
+    .input-help {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 4px;
+        font-style: italic;
+    }
+    
+    /* Navigation Buttons */
+    .action-buttons-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+        border: none;
+        border-radius: 12px;
+        padding: 16px 32px;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    
+    .btn-primary-modern:hover:not(.loading) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-primary-modern.loading {
+        opacity: 0.8;
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary-modern {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid var(--brand-600);
+        border-radius: 12px;
+        padding: 16px 24px;
+        color: var(--brand-600);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        font-size: 1rem;
+        min-width: 160px;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-secondary-modern:hover {
+        background: var(--brand-600);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Status Alerts */
+    .status-alert {
+        border-radius: 12px;
+        padding: 16px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    
+    .status-alert.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #065f46;
+    }
+    
+    .status-alert.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #991b1b;
+    }
+    
+    .warning-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .action-buttons-container {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .btn-primary-modern,
+        .btn-secondary-modern {
+            width: 100%;
+            min-width: unset;
+        }
+        
+        .hero-title {
+            font-size: 1.875rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .modern-content {
+            padding: 20px;
+        }
+        
+        .medical-grid,
+        .procedure-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-header,
+        .modal-footer {
+            padding: 20px;
+        }
+        
+        .modern-modal {
+            margin: 20px;
+            max-width: calc(100vw - 40px);
+        }
+    }
+</style>

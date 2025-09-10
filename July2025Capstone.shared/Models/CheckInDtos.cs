@@ -90,7 +90,7 @@ namespace July2025Capstone.Shared.Models
         public string City { get; set; } = "";
         
         [Required(ErrorMessage = "State is required")]
-        [StringLength(50)]
+        [StringLength(2, ErrorMessage = "Must be abbreviated. Ex: CO, WY, etc.")]
         public string State { get; set; } = "";
         
         [Required(ErrorMessage = "Postal code is required")]
@@ -115,7 +115,6 @@ namespace July2025Capstone.Shared.Models
         [StringLength(50)]
         public string PolicyNumber { get; set; } = "";
         
-        [Required(ErrorMessage = "Group number is required")]
         [StringLength(50)]
         public string GroupNumber { get; set; } = "";
         

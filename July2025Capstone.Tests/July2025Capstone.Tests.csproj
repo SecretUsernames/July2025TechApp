@@ -20,6 +20,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.18" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.18" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.18" />
+    <PackageReference Include="Moq.Contrib.HttpClient" Version="1.4.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +34,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\July2025Capstone\July2025Capstone.Client\July2025Capstone.Client.csproj" />
-    <ProjectReference Include="..\July2025Capstone.Shared\July2025Capstone.Shared.csproj" />
+    <ProjectReference Include="..\July2025Capstone.shared\July2025Capstone.shared.csproj" />
+    <ProjectReference Include="..\July2025Capstone\July2025Capstone\July2025Capstone.csproj" />
   </ItemGroup>
 
 </Project>

@@ -36,16 +36,6 @@
         }
       });
 
-      // Heart rate
-      makeChart('hrChart', {
-        data: {
-          labels,
-          datasets: [
-            { label:'HR', data:[66,70,69,68,71,67,68], borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.12)', fill:true }
-          ]
-        }
-      });
-
       // Glucose
       makeChart('glucoseChart', {
         data: {

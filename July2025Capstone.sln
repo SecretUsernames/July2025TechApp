@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.36310.24
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "July2025Capstone.Client", "July2025Capstone\July2025Capstone.Client\July2025Capstone.Client.csproj", "{75B2C119-47D5-44B5-93FA-3DD0ABB68210}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "July2025Capstone.Shared", "July2025Capstone.Shared\July2025Capstone.Shared.csproj", "{A5D0BB55-D27C-40A4-8A5B-1F45E42CB5E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "July2025Capstone.shared", "July2025Capstone.shared\July2025Capstone.shared.csproj", "{A5D0BB55-D27C-40A4-8A5B-1F45E42CB5E9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "July2025Capstone", "July2025Capstone", "{BB96C25C-B013-D50D-899F-8245ADBDE211}"
 EndProject

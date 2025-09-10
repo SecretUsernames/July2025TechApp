@@ -401,3 +401,110 @@ html, body{
 .mv-chat-input textarea{ border-radius:8px; border:1px solid #d1d5db; resize:vertical; }
 .mv-chat-input button{ border-radius:8px; padding:8px 14px; }
 .mv-chat-disclaimer{ font-size:12px; color:#64748b; padding:6px 10px 12px; }
+
+/* Stretched Chart Styling */
+.stretched-chart {
+  width: 100% !important;
+  height: 400px !important;
+  overflow: hidden;
+  display: block !important;
+}
+
+.stretched-chart .e-chart,
+.stretched-chart .e-control,
+.stretched-chart .e-chart-control {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+}
+
+.stretched-chart svg {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+}
+
+.card-body {
+  overflow-x: auto;
+}
+
+/* Force Syncfusion chart to fill container */
+.stretched-chart > .e-control.e-chart {
+  width: 100% !important;
+  height: 400px !important;
+}
+
+.stretched-chart .e-chart svg {
+  width: 100% !important;
+  height: 400px !important;
+}
+
+/* Analytics Page Styling - Match Homepage Aesthetic */
+.analytics-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: calc(100vh - 56px);
+  padding: 20px;
+}
+
+.analytics-page .card {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 16px !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.analytics-page .card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.analytics-page .card-title {
+  color: #4f46e5 !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+}
+
+.analytics-page h2 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  font-weight: 300 !important;
+  font-size: 2.5rem !important;
+}
+
+.analytics-page .text-muted {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1.1rem !important;
+}
+
+.analytics-page .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.analytics-page .btn-primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.analytics-page .card-body {
+  padding: 1.5rem !important;
+}
+
+/* Chart styling enhancements */
+.stretched-chart .e-chart {
+  border-radius: 12px !important;
+}
+
+.analytics-page .alert-info {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
+  border: 1px solid rgba(102, 126, 234, 0.2) !important;
+  color: #4f46e5 !important;
+  border-radius: 12px !important;
+}

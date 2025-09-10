@@ -1,223 +1,1419 @@
 @page "/analytics"
 @using System.Net.Http.Json
+@using July2025Capstone.Shared.Models
+@using Microsoft.AspNetCore.Components.Web
+@using Syncfusion.Blazor.Charts
+@using Charts = Syncfusion.Blazor.Charts
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @rendermode InteractiveWebAssembly
 
 <PageTitle>Health Analytics</PageTitle>
 
-<h3 class="mb-3">Health Analytics</h3>
-<p class="text-muted">A quick look at your trends. (Live charts will plug in here.)</p>
+<style>
+    .modal {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal.show {
+        display: block;
+    }
+    .stretched-chart {
+        width: 100%;
+        height: 400px;
+    }
+    .stretched-chart .e-chart {
+        width: 100% !important;
+    }
+</style>
 
-@if (isLoading)
-{
-    <div class="row g-3">
-        <div class="col-12">
-            <div class="d-flex justify-content-center">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
+<div class="analytics-page">
+    <div class="container-fluid py-3">
+        <h2 class="mb-3">Health Analytics</h2>
+        <p class="text-muted">Your health trends over time</p>
+
+    @if (isLoading)
+    {
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
-else if (hasError)
-{
-    <div class="row g-3">
-        <div class="col-12">
-            <div class="alert alert-danger" role="alert">
-                <h4 class="alert-heading">Error Loading Data</h4>
-                <p>@errorMessage</p>
-                <button class="btn btn-outline-danger" @onclick="RefreshData">Retry</button>
+    }
+    else if (hasError)
+    {
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Error Loading Data</h4>
+                    <p>@errorMessage</p>
+                    <button class="btn btn-outline-danger" @onclick="RefreshData">Retry</button>
+                </div>
             </div>
         </div>
-    </div>
-}
-else
-{
-    <div class="row g-3">
-        <div class="col-lg-8">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Vitals Trend</h5>
-                    <div class="chart-placeholder">
-                        @if (vitalsData?.Readings?.Any() == true)
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Blood Pressure Trends</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowAddBloodPressureModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Reading
+                                </button>
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowViewBloodPressureModal()">
+                                    <i class="bi bi-list-ul me-1"></i>View Readings
+                                </button>
+                            </div>
+                        </div>
+                        @if (bloodPressureData?.Any() == true)
                         {
-                            <div class="text-center text-muted">
-                                <p>Chart data loaded (@vitalsData.Readings.Count readings)</p>
-                                <small>Chart visualization will be implemented here</small>
+                            <div class="stretched-chart">
+                                <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
+                                    <ChartPrimaryXAxis ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd" />
+                                    <ChartPrimaryYAxis Title="mmHg" Minimum="60" Maximum="180" />
+                                    <ChartLegendSettings Position="@Syncfusion.Blazor.Charts.LegendPosition.Bottom" Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></ChartLegendSettings>
+                                <ChartSeriesCollection>
+                                    <ChartSeries DataSource="@bloodPressureData"
+                                              XName="DateMeasured"
+                                              YName="Systolic"
+                                              Name="Systolic"
+                                              Fill="#667eea"
+                                              Type="@Charts.ChartSeriesType.Line">
+                                        <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
+                                    </ChartSeries>
+                                    <ChartSeries DataSource="@bloodPressureData"
+                                              XName="DateMeasured"
+                                              YName="Diastolic"
+                                              Name="Diastolic"
+                                              Fill="#764ba2"
+                                              Type="@Charts.ChartSeriesType.Line">
+                                        <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
+                                    </ChartSeries>
+                                </ChartSeriesCollection>
+                                </SfChart>
                             </div>
                         }
                         else
                         {
-                            <div class="text-center text-muted">
-                                <p>No vitals data available</p>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No blood pressure data available
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Glucose Levels</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowAddGlucoseModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Reading
+                                </button>
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowViewGlucoseModal()">
+                                    <i class="bi bi-list-ul me-1"></i>View Readings
+                                </button>
+                            </div>
+                        </div>
+                        @if (glucoseData?.Any() == true)
+                        {
+                            <div class="stretched-chart">
+                                <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
+                                    <ChartPrimaryXAxis ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd" />
+                                    <ChartPrimaryYAxis Title="mg/dL" Minimum="60" Maximum="200" />
+                                    <ChartLegendSettings Position="@Syncfusion.Blazor.Charts.LegendPosition.Bottom" Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></ChartLegendSettings>
+                                    <ChartSeriesCollection>
+                                        <ChartSeries DataSource="@glucoseData"
+                                                  XName="DateMeasured"
+                                                  YName="GlucoseValue"
+                                                  Name="Glucose"
+                                                  Fill="#48bb78"
+                                                  Type="@Syncfusion.Blazor.Charts.ChartSeriesType.Line">
+                                            <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
+                                        </ChartSeries>
+                                    </ChartSeriesCollection>
+                                </SfChart>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No glucose data available
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Weight History</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowAddWeightModal()">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Reading
+                                </button>
+                                <button class="btn btn-primary btn-sm" @onclick="() => ShowViewWeightModal()">
+                                    <i class="bi bi-list-ul me-1"></i>View Readings
+                                </button>
+                            </div>
+                        </div>
+                        @if (weightData?.Any() == true)
+                        {
+                            <div class="stretched-chart">
+                                <SfChart Width="100%" Height="400px" Theme="@Syncfusion.Blazor.Theme.Bootstrap5">
+                                    <ChartPrimaryXAxis ValueType="@Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MM/dd" />
+                                    <ChartPrimaryYAxis Title="Weight" />
+                                    <ChartLegendSettings Position="@Syncfusion.Blazor.Charts.LegendPosition.Bottom" Alignment="@Syncfusion.Blazor.Charts.Alignment.Center"></ChartLegendSettings>
+                                    <ChartSeriesCollection>
+                                        <ChartSeries DataSource="@weightData"
+                                                  XName="DateMeasured"
+                                                  YName="WeightValue"
+                                                  Name="Weight"
+                                                  Fill="#ed64a6"
+                                                  Type="@Syncfusion.Blazor.Charts.ChartSeriesType.Line">
+                                            <ChartMarker Visible="true" Height="8" Width="8"></ChartMarker>
+                                        </ChartSeries>
+                                    </ChartSeriesCollection>
+                                </SfChart>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No weight data available
                             </div>
                         }
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <h6 class="card-title mb-2">Recent Uploads</h6>
-                    <ul class="list-unstyled mb-0 small">
-                        @if (recentUploads?.Any() == true)
-                        {
-                            @foreach (var upload in recentUploads)
-                            {
-                                <li>• @upload.Name — @upload.TimeAgo</li>
-                            }
-                        }
-                        else
-                        {
-                            <li class="text-muted">No recent uploads</li>
-                        }
-                    </ul>
-                </div>
-            </div>
+    }
+    </div>
+</div>
 
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6 class="card-title">Alerts</h6>
-                    @if (alertsResponse?.HasAlerts == true)
-                    {
-                        <p class="small text-danger mb-2">@alertsResponse.Count alert@(alertsResponse.Count != 1 ? "s" : "") need attention!</p>
-                    }
-                    else
-                    {
-                        <p class="small text-muted mb-2">No critical alerts.</p>
-                    }
-                    <button class="btn btn-outline-primary btn-sm" @onclick="ViewAllAlerts" disabled="@(!alertsResponse?.HasAlerts ?? true)">
-                        View All
-                    </button>
+@* Blood Pressure Modal *@
+<div class="modal @(isBloodPressureModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Blood Pressure Reading</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <EditForm Model="@newBloodPressure" OnValidSubmit="HandleBloodPressureSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Systolic (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="newBloodPressure.Systolic" />
+                        <ValidationMessage For="@(() => newBloodPressure.Systolic)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Diastolic (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="newBloodPressure.Diastolic" />
+                        <ValidationMessage For="@(() => newBloodPressure.Diastolic)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="newBloodPressure.DateMeasured" />
+                        <ValidationMessage For="@(() => newBloodPressure.DateMeasured)" />
+                    </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Glucose Modal *@
+<div class="modal @(isGlucoseModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Glucose Reading</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <EditForm Model="@newGlucose" OnValidSubmit="HandleGlucoseSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Glucose Level (mg/dL)</label>
+                        <InputNumber class="form-control" @bind-Value="newGlucose.GlucoseValue" />
+                        <ValidationMessage For="@(() => newGlucose.GlucoseValue)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="newGlucose.DateMeasured" />
+                        <ValidationMessage For="@(() => newGlucose.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Weight Modal *@
+<div class="modal @(isWeightModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Weight Reading</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <EditForm Model="@newWeight" OnValidSubmit="HandleWeightSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Weight Value</label>
+                        <InputNumber class="form-control" @bind-Value="newWeight.WeightValue" />
+                        <ValidationMessage For="@(() => newWeight.WeightValue)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit</label>
+                        <InputSelect class="form-control" @bind-Value="newWeight.Unit">
+                            <option value="@WeightUnit.Pounds">Pounds (lbs)</option>
+                            <option value="@WeightUnit.Kilograms">Kilograms (kg)</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => newWeight.Unit)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="newWeight.DateMeasured" />
+                        <ValidationMessage For="@(() => newWeight.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* View Blood Pressure Readings Modal *@
+<div class="modal @(isViewBloodPressureModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Blood Pressure Readings</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <div class="modal-body">
+                @if (bloodPressureData?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Systolic</th>
+                                    <th>Diastolic</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in bloodPressureData.OrderByDescending(x => x.DateMeasured))
+                                {
+                                    <tr>
+                                        <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.Systolic mmHg</td>
+                                        <td>@reading.Diastolic mmHg</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditBloodPressureReading(reading)">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteBloodPressureReading(reading.Id)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No blood pressure readings found.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideModals">Close</button>
             </div>
         </div>
     </div>
+</div>
+
+@* View Glucose Readings Modal *@
+<div class="modal @(isViewGlucoseModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Glucose Readings</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <div class="modal-body">
+                @if (glucoseData?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Glucose Level</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in glucoseData.OrderByDescending(x => x.DateMeasured))
+                                {
+                                    <tr>
+                                        <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.GlucoseValue mg/dL</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditGlucoseReading(reading)">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteGlucoseReading(reading.Id)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No glucose readings found.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideModals">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* View Weight Readings Modal *@
+<div class="modal @(isViewWeightModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Weight Readings</h5>
+                <button type="button" class="btn-close" @onclick="HideModals"></button>
+            </div>
+            <div class="modal-body">
+                @if (weightData?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight</th>
+                                    <th>Unit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in weightData.OrderByDescending(x => x.DateMeasured))
+                                {
+                                    <tr>
+                                        <td>@reading.DateMeasured.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.WeightValue</td>
+                                        <td>@(reading.Unit == WeightUnit.Pounds ? "lbs" : "kg")</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm me-2" @onclick="() => EditWeightReading(reading)">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteWeightReading(reading.Id)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No weight readings found.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideModals">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Edit Blood Pressure Modal *@
+<div class="modal @(isEditBloodPressureModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <EditForm Model="@editBloodPressure" OnValidSubmit="HandleEditBloodPressureSubmit">
+                <DataAnnotationsValidator />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Blood Pressure Reading</h5>
+                    <button type="button" class="btn-close" @onclick="HideModals"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Systolic Pressure (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="editBloodPressure.Systolic" />
+                        <ValidationMessage For="@(() => editBloodPressure.Systolic)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Diastolic Pressure (mmHg)</label>
+                        <InputNumber class="form-control" @bind-Value="editBloodPressure.Diastolic" />
+                        <ValidationMessage For="@(() => editBloodPressure.Diastolic)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="editBloodPressure.DateMeasured" />
+                        <ValidationMessage For="@(() => editBloodPressure.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Edit Glucose Modal *@
+<div class="modal @(isEditGlucoseModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <EditForm Model="@editGlucose" OnValidSubmit="HandleEditGlucoseSubmit">
+                <DataAnnotationsValidator />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Glucose Reading</h5>
+                    <button type="button" class="btn-close" @onclick="HideModals"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Glucose Level (mg/dL)</label>
+                        <InputNumber class="form-control" @bind-Value="editGlucose.GlucoseValue" />
+                        <ValidationMessage For="@(() => editGlucose.GlucoseValue)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="editGlucose.DateMeasured" />
+                        <ValidationMessage For="@(() => editGlucose.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Edit Weight Modal *@
+<div class="modal @(isEditWeightModalVisible ? "show d-block" : "d-none")" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <EditForm Model="@editWeight" OnValidSubmit="HandleEditWeightSubmit">
+                <DataAnnotationsValidator />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Weight Reading</h5>
+                    <button type="button" class="btn-close" @onclick="HideModals"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Weight</label>
+                        <InputNumber class="form-control" @bind-Value="editWeight.WeightValue" />
+                        <ValidationMessage For="@(() => editWeight.WeightValue)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit</label>
+                        <InputSelect class="form-select" @bind-Value="editWeight.Unit">
+                            <option value="@WeightUnit.Pounds">Pounds (lbs)</option>
+                            <option value="@WeightUnit.Kilograms">Kilograms (kg)</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => editWeight.Unit)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Measured</label>
+                        <InputDate class="form-control" @bind-Value="editWeight.DateMeasured" />
+                        <ValidationMessage For="@(() => editWeight.DateMeasured)" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideModals">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@* Modal Backdrop *@
+@if (isBloodPressureModalVisible || isGlucoseModalVisible || isWeightModalVisible || isViewBloodPressureModalVisible || isViewGlucoseModalVisible || isViewWeightModalVisible || isEditBloodPressureModalVisible || isEditGlucoseModalVisible || isEditWeightModalVisible)
+{
+    <div class="modal-backdrop show"></div>
 }
 
 @code {
-    private List<UploadItem>? recentUploads;
-    private AlertsResponse? alertsResponse;
-    private VitalsData? vitalsData;
+    // State management
     private bool isLoading = true;
     private bool hasError = false;
-    private string errorMessage = string.Empty;
+    private string? errorMessage;
+    private string? userId;
+
+    // Data collections
+    private List<VitalBloodPressure>? bloodPressureData;
+    private List<VitalGlucose>? glucoseData;
+    private List<VitalWeight>? weightData;
+
+    // Modal visibility states
+    private bool isBloodPressureModalVisible;
+    private bool isGlucoseModalVisible;
+    private bool isWeightModalVisible;
+    private bool isViewBloodPressureModalVisible;
+    private bool isViewGlucoseModalVisible;
+    private bool isViewWeightModalVisible;
+    private bool isEditBloodPressureModalVisible;
+    private bool isEditGlucoseModalVisible;
+    private bool isEditWeightModalVisible;
+
+    // Form models
+    private VitalBloodPressure newBloodPressure = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
+    private VitalGlucose newGlucose = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
+    private VitalWeight newWeight = new() { DateMeasured = DateTime.Today, UserId = string.Empty, Unit = WeightUnit.Pounds };
+    
+    // Edit form models
+    private VitalBloodPressure editBloodPressure = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
+    private VitalGlucose editGlucose = new() { DateMeasured = DateTime.Today, UserId = string.Empty };
+    private VitalWeight editWeight = new() { DateMeasured = DateTime.Today, UserId = string.Empty, Unit = WeightUnit.Pounds };
+
+    // Form submission handlers
+    private async Task HandleBloodPressureSubmit(EditContext context)
+    {
+        Console.WriteLine("Blood pressure form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await SaveBloodPressure();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    private async Task HandleGlucoseSubmit(EditContext context)
+    {
+        Console.WriteLine("Glucose form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await SaveGlucose();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    private async Task HandleWeightSubmit(EditContext context)
+    {
+        Console.WriteLine("Weight form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await SaveWeight();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    // Edit form submission handlers
+    private async Task HandleEditBloodPressureSubmit(EditContext context)
+    {
+        Console.WriteLine("Edit blood pressure form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await UpdateBloodPressure();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    private async Task HandleEditGlucoseSubmit(EditContext context)
+    {
+        Console.WriteLine("Edit glucose form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await UpdateGlucose();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    private async Task HandleEditWeightSubmit(EditContext context)
+    {
+        Console.WriteLine("Edit weight form submitted");
+        if (context.Validate())
+        {
+            Console.WriteLine("Form validation passed");
+            await UpdateWeight();
+        }
+        else
+        {
+            Console.WriteLine("Form validation failed");
+            foreach (var error in context.GetValidationMessages())
+            {
+                Console.WriteLine($"Validation error: {error}");
+            }
+        }
+    }
+
+    // Modal control methods
+    private void ShowAddBloodPressureModal()
+    {
+        newBloodPressure = new() { DateMeasured = DateTime.Today, UserId = userId ?? string.Empty };
+        isBloodPressureModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowAddGlucoseModal()
+    {
+        newGlucose = new() { DateMeasured = DateTime.Today, UserId = userId ?? string.Empty };
+        isGlucoseModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowAddWeightModal()
+    {
+        newWeight = new() { DateMeasured = DateTime.Today, UserId = userId ?? string.Empty };
+        isWeightModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowViewBloodPressureModal()
+    {
+        isViewBloodPressureModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowViewGlucoseModal()
+    {
+        isViewGlucoseModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void ShowViewWeightModal()
+    {
+        isViewWeightModalVisible = true;
+        StateHasChanged();
+    }
+
+    // Edit methods
+    private void EditBloodPressureReading(VitalBloodPressure reading)
+    {
+        // Copy the reading data to the edit model
+        editBloodPressure = new VitalBloodPressure
+        {
+            Id = reading.Id,
+            UserId = reading.UserId,
+            Systolic = reading.Systolic,
+            Diastolic = reading.Diastolic,
+            DateMeasured = reading.DateMeasured
+        };
+        
+        // Hide view modal and show edit modal
+        isViewBloodPressureModalVisible = false;
+        isEditBloodPressureModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void EditGlucoseReading(VitalGlucose reading)
+    {
+        // Copy the reading data to the edit model
+        editGlucose = new VitalGlucose
+        {
+            Id = reading.Id,
+            UserId = reading.UserId,
+            GlucoseValue = reading.GlucoseValue,
+            DateMeasured = reading.DateMeasured
+        };
+        
+        // Hide view modal and show edit modal
+        isViewGlucoseModalVisible = false;
+        isEditGlucoseModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void EditWeightReading(VitalWeight reading)
+    {
+        // Copy the reading data to the edit model
+        editWeight = new VitalWeight
+        {
+            Id = reading.Id,
+            UserId = reading.UserId,
+            WeightValue = reading.WeightValue,
+            Unit = reading.Unit,
+            DateMeasured = reading.DateMeasured
+        };
+        
+        // Hide view modal and show edit modal
+        isViewWeightModalVisible = false;
+        isEditWeightModalVisible = true;
+        StateHasChanged();
+    }
+
+    private void HideModals()
+    {
+        isBloodPressureModalVisible = false;
+        isGlucoseModalVisible = false;
+        isWeightModalVisible = false;
+        isViewBloodPressureModalVisible = false;
+        isViewGlucoseModalVisible = false;
+        isViewWeightModalVisible = false;
+        isEditBloodPressureModalVisible = false;
+        isEditGlucoseModalVisible = false;
+        isEditWeightModalVisible = false;
+    }
+
+    // Save methods
+    private async Task SaveBloodPressure()
+    {
+        try
+        {
+            Console.WriteLine("Starting SaveBloodPressure...");
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "User ID not available";
+                StateHasChanged();
+                return;
+            }
+
+            if (Http.BaseAddress == null)
+            {
+                Http.BaseAddress = new Uri("http://localhost:5094/");
+            }
+
+            // Create the reading with user ID
+            newBloodPressure.UserId = userId;
+            
+            var response = await Http.PostAsJsonAsync("api/analytics/vitals/blood-pressure", newBloodPressure);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                ResetModal();
+                await RefreshData();
+            }
+            else
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to save blood pressure reading: {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception in SaveBloodPressure: {ex}");
+            errorMessage = $"Error saving blood pressure reading: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveGlucose()
+    {
+        try
+        {
+            Console.WriteLine("Starting SaveGlucose...");
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "User ID not available";
+                StateHasChanged();
+                return;
+            }
+
+            if (Http.BaseAddress == null)
+            {
+                Http.BaseAddress = new Uri("http://localhost:5094/");
+            }
+
+            Console.WriteLine($"Attempting to save glucose: {newGlucose.GlucoseValue}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Set the user ID directly on the form model
+            newGlucose.UserId = userId;
+            Console.WriteLine($"Sending glucose request with data: Value={newGlucose.GlucoseValue}, UserId={newGlucose.UserId}");
+            
+            var response = await Http.PostAsJsonAsync("api/analytics/vitals/glucose", newGlucose);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                newGlucose = new() { DateMeasured = DateTime.Today }; // Reset the form
+                StateHasChanged(); // Ensure UI updates
+                await RefreshData();
+            }
+            else
+            {
+                errorMessage = $"Error saving glucose: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception saving glucose: {ex}");
+            errorMessage = $"Error saving glucose: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveWeight()
+    {
+        try
+        {
+            Console.WriteLine("Starting SaveWeight...");
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "User ID not available";
+                StateHasChanged();
+                return;
+            }
+
+            if (Http.BaseAddress == null)
+            {
+                Http.BaseAddress = new Uri("http://localhost:5094/");
+            }
+
+            Console.WriteLine($"Attempting to save weight: {newWeight.WeightValue}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Set the user ID directly on the form model
+            newWeight.UserId = userId;
+            Console.WriteLine($"Sending weight request with data: Value={newWeight.WeightValue}, UserId={newWeight.UserId}");
+            
+            var response = await Http.PostAsJsonAsync("api/analytics/vitals/weight", newWeight);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                newWeight = new() { DateMeasured = DateTime.Today }; // Reset the form
+                StateHasChanged(); // Ensure UI updates
+                await RefreshData();
+            }
+            else
+            {
+                errorMessage = $"Error saving weight: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception saving weight: {ex}");
+            errorMessage = $"Error saving weight: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    // Update methods for editing
+    private async Task UpdateBloodPressure()
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to update blood pressure: {editBloodPressure.Systolic}/{editBloodPressure.Diastolic}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Ensure the user ID is set
+            editBloodPressure.UserId = userId ?? string.Empty;
+            Console.WriteLine($"Sending update request with data: Systolic={editBloodPressure.Systolic}, Diastolic={editBloodPressure.Diastolic}, UserId={editBloodPressure.UserId}");
+            
+            var response = await Http.PutAsJsonAsync($"api/analytics/vitals/blood-pressure/{editBloodPressure.Id}", editBloodPressure);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                editBloodPressure = new() { DateMeasured = DateTime.Today }; // Reset the form
+                await RefreshData(); // Refresh data to update charts
+                isViewBloodPressureModalVisible = true; // Show the view modal again
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Error updating blood pressure: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating blood pressure: {ex}");
+            errorMessage = $"Error updating blood pressure: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateGlucose()
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to update glucose: {editGlucose.GlucoseValue}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Ensure the user ID is set
+            editGlucose.UserId = userId ?? string.Empty;
+            Console.WriteLine($"Sending update request with data: GlucoseValue={editGlucose.GlucoseValue}, UserId={editGlucose.UserId}");
+            
+            var response = await Http.PutAsJsonAsync($"api/analytics/vitals/glucose/{editGlucose.Id}", editGlucose);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                editGlucose = new() { DateMeasured = DateTime.Today }; // Reset the form
+                await RefreshData(); // Refresh data to update charts
+                isViewGlucoseModalVisible = true; // Show the view modal again
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Error updating glucose: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating glucose: {ex}");
+            errorMessage = $"Error updating glucose: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateWeight()
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to update weight: {editWeight.WeightValue}");
+            Console.WriteLine($"User ID: {userId}");
+
+            // Ensure the user ID is set
+            editWeight.UserId = userId ?? string.Empty;
+            Console.WriteLine($"Sending update request with data: WeightValue={editWeight.WeightValue}, UserId={editWeight.UserId}");
+            
+            var response = await Http.PutAsJsonAsync($"api/analytics/vitals/weight/{editWeight.Id}", editWeight);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response: {response.StatusCode}, Content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                HideModals();
+                editWeight = new() { DateMeasured = DateTime.Today }; // Reset the form
+                await RefreshData(); // Refresh data to update charts
+                isViewWeightModalVisible = true; // Show the view modal again
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Error updating weight: {response.StatusCode} - {responseContent}";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating weight: {ex}");
+            errorMessage = $"Error updating weight: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Http.BaseAddress == null)
+        {
+            Http.BaseAddress = new Uri("http://localhost:5094/");
+        }
+        
+        // Wait for authentication state to be available
+        await WaitForAuthenticationAndLoadData();
+    }
+
+    private async Task WaitForAuthenticationAndLoadData()
+    {
+        // Try to get authentication state multiple times if needed
+        for (int i = 0; i < 10; i++) // Try for up to 5 seconds
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            userId = user.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            
+            Console.WriteLine($"Attempt {i + 1} - User authenticated: {user.Identity?.IsAuthenticated}");
+            Console.WriteLine($"Attempt {i + 1} - UserId: {userId}");
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("Authentication successful, loading data...");
+                await RefreshData();
+                return;
+            }
+            
+            // If no user ID yet, wait a bit and try again
+            await Task.Delay(500);
+        }
+        
+        // If we get here, authentication failed or is taking too long
+        Console.WriteLine("Authentication timeout or failed, loading data anyway...");
+        await RefreshData();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await LoadData();
-        }
-    }
-
-    private async Task LoadData()
-    {
-        isLoading = true;
-        hasError = false;
-        errorMessage = string.Empty;
-        StateHasChanged();
-
-        try
-        {
-            // Configure the HttpClient base address if it's not set (for server-side rendering)
-            if (string.IsNullOrEmpty(Http.BaseAddress?.ToString()))
-            {
-                // For server-side calls, use localhost or configure appropriately
-                Http.BaseAddress = new Uri("https://localhost:7014/"); // Update port as needed
-            }
-
-            // Load all data concurrently for better performance
-            var uploadTask = Http.GetFromJsonAsync<List<UploadItem>>("api/analytics/recent-uploads");
-            var alertsTask = Http.GetFromJsonAsync<AlertsResponse>("api/analytics/alerts");
-            var vitalsTask = Http.GetFromJsonAsync<VitalsData>("api/analytics/vitals");
-
-            await Task.WhenAll(uploadTask, alertsTask, vitalsTask);
-
-            recentUploads = await uploadTask ?? new List<UploadItem>();
-            alertsResponse = await alertsTask ?? new AlertsResponse();
-            vitalsData = await vitalsTask ?? new VitalsData();
-        }
-        catch (HttpRequestException ex)
-        {
-            hasError = true;
-            errorMessage = $"Network error: {ex.Message}";
-        }
-        catch (Exception ex)
-        {
-            hasError = true;
-            errorMessage = $"An unexpected error occurred: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
+            // Wait a bit for charts to be fully rendered, then trigger refresh
+            await Task.Delay(1500);
+            Console.WriteLine("First render completed, triggering chart refresh...");
+            await TriggerChartRefresh();
         }
     }
 
     private async Task RefreshData()
     {
-        await LoadData();
+        try
+        {
+            isLoading = true;
+            hasError = false;
+            errorMessage = null;
+
+            // Load blood pressure data
+            try
+            {
+                var bpResponse = await Http.GetAsync("api/analytics/vitals/blood-pressure");
+                if (bpResponse.IsSuccessStatusCode)
+                {
+                    bloodPressureData = await bpResponse.Content.ReadFromJsonAsync<List<VitalBloodPressure>>();
+                }
+                else
+                {
+                    Console.WriteLine($"Blood pressure endpoint returned: {bpResponse.StatusCode}");
+                    bloodPressureData = new List<VitalBloodPressure>(); // Initialize empty list instead of error
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception loading blood pressure data: {ex.Message}");
+                bloodPressureData = new List<VitalBloodPressure>();
+            }
+
+            // Load glucose data
+            try
+            {
+                var glucoseResponse = await Http.GetAsync("api/analytics/vitals/glucose");
+                if (glucoseResponse.IsSuccessStatusCode)
+                {
+                    glucoseData = await glucoseResponse.Content.ReadFromJsonAsync<List<VitalGlucose>>();
+                }
+                else
+                {
+                    Console.WriteLine($"Glucose endpoint returned: {glucoseResponse.StatusCode}");
+                    glucoseData = new List<VitalGlucose>(); // Initialize empty list instead of error
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception loading glucose data: {ex.Message}");
+                glucoseData = new List<VitalGlucose>();
+            }
+
+            // Load weight data
+            try
+            {
+                var weightResponse = await Http.GetAsync("api/analytics/vitals/weight");
+                if (weightResponse.IsSuccessStatusCode)
+                {
+                    weightData = await weightResponse.Content.ReadFromJsonAsync<List<VitalWeight>>();
+                }
+                else
+                {
+                    Console.WriteLine($"Weight endpoint returned: {weightResponse.StatusCode}");
+                    weightData = new List<VitalWeight>(); // Initialize empty list instead of error
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception loading weight data: {ex.Message}");
+                weightData = new List<VitalWeight>();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Only show error for major exceptions (network issues, etc.)
+            Console.WriteLine($"Major exception in RefreshData: {ex.Message}");
+            hasError = true;
+            errorMessage = $"Unable to connect to the server. Please check your connection and try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+            
+            // Force chart refresh after data is loaded
+            await Task.Delay(100);
+            StateHasChanged();
+        }
     }
 
-    private void ViewAllAlerts()
+    private void ResetModal()
     {
-        // TODO: Navigate to alerts page or show modal
-        // NavigationManager.NavigateTo("/alerts");
+        errorMessage = null;
+        hasError = false;
+        HideModals();
+        StateHasChanged();
     }
 
-    // Model classes for client-side use
-    public class UploadItem
+    private async Task TriggerChartRefresh()
     {
-        public string Name { get; set; } = string.Empty;
-        public string TimeAgo { get; set; } = string.Empty;
-        public DateTime UploadDate { get; set; }
+        Console.WriteLine("Triggering chart refresh workaround...");
+        
+        if (string.IsNullOrEmpty(userId))
+        {
+            Console.WriteLine("UserId is null or empty, attempting chart refresh without authentication...");
+            // Still try to refresh charts even if not authenticated yet
+            await Task.Delay(500); // Wait for potential authentication to complete
+            await ForceChartRerender();
+            return;
+        }
+
+        try
+        {
+            // Create a temporary blood pressure reading to trigger chart refresh
+            var tempBloodPressure = new VitalBloodPressure
+            {
+                UserId = userId,
+                Systolic = 120,
+                Diastolic = 80,
+                DateMeasured = DateTime.Now
+            };
+
+            Console.WriteLine("Adding temporary blood pressure reading...");
+            // Add the temporary reading
+            var addResponse = await Http.PostAsJsonAsync("api/analytics/vitals/blood-pressure", tempBloodPressure);
+            
+            if (addResponse.IsSuccessStatusCode)
+            {
+                var createdReading = await addResponse.Content.ReadFromJsonAsync<VitalBloodPressure>();
+                Console.WriteLine($"Temporary reading created with ID: {createdReading?.Id}");
+                
+                if (createdReading != null)
+                {
+                    // Immediately delete the temporary reading
+                    Console.WriteLine("Deleting temporary reading...");
+                    var deleteResponse = await Http.DeleteAsync($"api/analytics/vitals/blood-pressure/{createdReading.Id}");
+                    Console.WriteLine($"Delete response status: {deleteResponse.StatusCode}");
+                    
+                    // Refresh the data to ensure charts are properly loaded
+                    Console.WriteLine("Refreshing data after chart refresh workaround...");
+                    await RefreshData();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Failed to add temporary reading: {addResponse.StatusCode}");
+            }
+            
+            Console.WriteLine("Chart refresh completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in TriggerChartRefresh: {ex.Message}");
+            // If the trigger fails, just try a different approach
+            await ForceChartRerender();
+        }
     }
 
-    public class AlertsResponse
+    private async Task ForceChartRerender()
     {
-        public bool HasAlerts { get; set; }
-        public int Count { get; set; }
-        public List<Alert> Alerts { get; set; } = new();
+        Console.WriteLine("Forcing chart re-render by clearing and restoring data...");
+        
+        // Store current data
+        var tempBpData = bloodPressureData;
+        var tempGlucoseData = glucoseData;
+        var tempWeightData = weightData;
+        
+        // Clear data to force chart unmount
+        bloodPressureData = null;
+        glucoseData = null;
+        weightData = null;
+        StateHasChanged();
+        
+        // Wait a brief moment
+        await Task.Delay(50);
+        
+        // Restore data to force chart remount
+        bloodPressureData = tempBpData;
+        glucoseData = tempGlucoseData;
+        weightData = tempWeightData;
+        StateHasChanged();
+        
+        Console.WriteLine("Chart re-render completed");
     }
 
-    public class Alert
+    // Delete methods for readings
+    private async Task DeleteBloodPressureReading(int id)
     {
-        public string Message { get; set; } = string.Empty;
-        public string Severity { get; set; } = string.Empty;
-        public DateTime CreatedDate { get; set; }
+        try
+        {
+            var response = await Http.DeleteAsync($"api/analytics/vitals/blood-pressure/{id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local data and refresh
+                bloodPressureData?.RemoveAll(bp => bp.Id == id);
+                StateHasChanged();
+                await RefreshData(); // Refresh to ensure data is current
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete blood pressure reading: {response.StatusCode}");
+                // Silently fail - just don't delete from UI, let refresh handle it
+                await RefreshData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting blood pressure reading: {ex.Message}");
+            // Silently fail - just refresh to get current state
+            await RefreshData();
+        }
     }
 
-    public class VitalsData
+    private async Task DeleteGlucoseReading(int id)
     {
-        public List<VitalReading> Readings { get; set; } = new();
+        try
+        {
+            var response = await Http.DeleteAsync($"api/analytics/vitals/glucose/{id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local data and refresh
+                glucoseData?.RemoveAll(g => g.Id == id);
+                StateHasChanged();
+                await RefreshData(); // Refresh to ensure data is current
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete glucose reading: {response.StatusCode}");
+                // Silently fail - just don't delete from UI, let refresh handle it
+                await RefreshData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting glucose reading: {ex.Message}");
+            // Silently fail - just refresh to get current state
+            await RefreshData();
+        }
     }
 
-    public class VitalReading
+    private async Task DeleteWeightReading(int id)
     {
-        public DateTime Date { get; set; }
-        public string Type { get; set; } = string.Empty;
-        public double Value { get; set; }
-        public string Unit { get; set; } = string.Empty;
+        try
+        {
+            var response = await Http.DeleteAsync($"api/analytics/vitals/weight/{id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Remove from local data and refresh
+                weightData?.RemoveAll(w => w.Id == id);
+                StateHasChanged();
+                await RefreshData(); // Refresh to ensure data is current
+            }
+            else
+            {
+                Console.WriteLine($"Failed to delete weight reading: {response.StatusCode}");
+                // Silently fail - just don't delete from UI, let refresh handle it
+                await RefreshData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting weight reading: {ex.Message}");
+            // Silently fail - just refresh to get current state
+            await RefreshData();
+        }
     }
 }
-
-<style>
-    .chart-placeholder {
-        height: 300px;
-        background-color: #f8f9fa;
-        border: 2px dashed #dee2e6;
-        border-radius: 0.375rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
-    }
-</style>

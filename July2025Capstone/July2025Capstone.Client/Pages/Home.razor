@@ -74,7 +74,6 @@
     {
         <div class="med-kpi my-4">
             <span class="badge badge-soft"><strong>BP:</strong> @dashboardData.BloodPressure</span>
-            <span class="badge badge-soft-danger"><strong>HR:</strong> @dashboardData.HeartRate bpm</span>
             <span class="badge badge-soft-info"><strong>Glucose:</strong> @dashboardData.Glucose mg/dL</span>
             <span class="badge badge-soft-success"><strong>Weight:</strong> @dashboardData.Weight lb</span>
             <span class="badge badge-soft"><strong>Last upload:</strong> @dashboardData.LastUpload</span>
@@ -88,8 +87,8 @@
     }
 
     <!-- Charts -->
-    <div class="row g-4">
-        <div class="col-lg-3 col-md-6">
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-4 col-md-6">
             <div class="card med-card">
                 <div class="card-body">
                     <div class="med-section-title">Vitals</div>
@@ -101,19 +100,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card med-card">
-                <div class="card-body">
-                    <div class="med-section-title">Vitals</div>
-                    <h5 class="card-title mb-3">Heart Rate</h5>
-                    <div class="med-chart-wrap">
-                        <canvas id="hrChart" class="med-chart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-4 col-md-6">
             <div class="card med-card">
                 <div class="card-body">
                     <div class="med-section-title">Labs</div>
@@ -125,11 +112,11 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-4 col-md-6">
             <div class="card med-card">
                 <div class="card-body">
                     <div class="med-section-title">Body</div>
-                    <h5 class="card-title mb-3">Weight & BMI</h5>
+                    <h5 class="card-title mb-3">BMI</h5>
                     <div class="med-chart-wrap">
                         <canvas id="weightChart" class="med-chart"></canvas>
                     </div>
@@ -250,7 +237,6 @@
     public class DashboardData
     {
         public string BloodPressure { get; set; } = "118/76";
-        public int HeartRate { get; set; } = 68;
         public int Glucose { get; set; } = 128;
         public int Weight { get; set; } = 162;
         public string LastUpload { get; set; } = "2h";

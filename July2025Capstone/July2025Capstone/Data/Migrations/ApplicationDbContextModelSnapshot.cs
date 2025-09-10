@@ -873,35 +873,29 @@ namespace July2025Capstone.Migrations
 
             modelBuilder.Entity("July2025Capstone.Models.VitalBloodPressure", b =>
                 {
-                    b.HasOne("July2025Capstone.Data.ApplicationUser", "User")
+                    b.HasOne("July2025Capstone.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("July2025Capstone.Models.VitalGlucose", b =>
                 {
-                    b.HasOne("July2025Capstone.Data.ApplicationUser", "User")
+                    b.HasOne("July2025Capstone.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("July2025Capstone.Models.VitalWeight", b =>
                 {
-                    b.HasOne("July2025Capstone.Data.ApplicationUser", "User")
+                    b.HasOne("July2025Capstone.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
